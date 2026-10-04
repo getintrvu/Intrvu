@@ -24,3 +24,8 @@ node_modules
 *.sln
 *.sw?
 .env
+
+dist
+*.tsbuildinfo
+.env.local
+key.pem

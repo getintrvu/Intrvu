@@ -16,6 +16,7 @@ FastAPI service for the IntrvuFit Chrome extension. Deployed on Vercel (Python r
 |---|---|---|---|
 | GET | `/api/health` | no | |
 | GET | `/api/v1/usage` | yes | `{used, limit, remaining}` for today |
+| DELETE | `/api/v1/account` | yes | permanently deletes the caller's Supabase account (their usage rows cascade) |
 | POST | `/api/v1/analyze` | yes | multipart: `resume` (PDF, max 4 MB) and `jobData` (JSON string: `jobTitle`, `company`, `description` >= 100 chars) |
 
 Errors always look like `{"error": {"code": "...", "message": "..."}}`. Codes: `unauthorized`, `invalid_pdf`, `encrypted_pdf`, `no_text_in_pdf`, `file_too_large`, `invalid_job_data`, `quota_exceeded`, `llm_busy`, `analysis_failed`, `service_unavailable`, `internal_error`.

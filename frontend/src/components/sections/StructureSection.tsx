@@ -13,7 +13,7 @@ const StructureSection: React.FC<StructureSectionProps> = ({ analysisData }) => 
   const completedMustHave = Number(structureData?.score?.completedMustHave || 0);
   const totalMustHave = Number(structureData?.score?.totalMustHave || 0);
   const completedNiceToHave = Number(structureData?.score?.completedNiceToHave || 0);
-  const totalNiceToHave = Number((structureData as any)?.score?.totalNiceToHave || 0);
+  const totalNiceToHave = Number(structureData?.score?.totalNiceToHave || 0);
   const mustHavePct = totalMustHave > 0
     ? Math.round((completedMustHave / totalMustHave) * 100)
     : 0;

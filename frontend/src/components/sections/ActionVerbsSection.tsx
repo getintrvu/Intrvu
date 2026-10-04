@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Item } from '../../types/AnalysisData';
 import { Check, CheckCircle2 } from 'lucide-react';
 import { AnalysisData } from '../../types/AnalysisData';
 import DetailedAnalysisHeader from '../DetailedAnalysisHeader';
@@ -45,7 +46,7 @@ const ActionVerbsSection: React.FC<ActionVerbsSectionProps> = ({ analysisData })
     };
   })();
 
-  const renderVerbCard = (item: any, type: 'strong' | 'weak') => {
+  const renderVerbCard = (item: Item, type: 'strong' | 'weak') => {
     const isStrong = type === 'strong';
     const actionVerb = String(item?.actionVerb || item?.verb || 'Action Verb').trim();
     const bulletPoint = String(item?.bulletPoint || item?.context || '').trim();

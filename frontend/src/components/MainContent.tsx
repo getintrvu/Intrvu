@@ -3,7 +3,6 @@ import { SectionType } from '../App';
 import { AnalysisData } from '../types/AnalysisData';
 import StartSection from './sections/StartSection';
 import ResultsView from './sections/ResultsView';
-import OverviewSection from './sections/OverviewSection';
 import KeywordsSection from './sections/KeywordsSection';
 import ExperienceSection from './sections/ExperienceSection';
 import EducationSection from './sections/EducationSection';
@@ -12,44 +11,33 @@ import StructureSection from './sections/StructureSection';
 import ActionVerbsSection from './sections/ActionVerbsSection';
 import MeasurableResultsSection from './sections/MeasurableResultsSection';
 import BulletEffectivenessSection from './sections/BulletEffectivenessSection';
-import { JobData } from '../types/JobData';
+import { clearResume } from '../lib/resumeStore';
 
 interface MainContentProps {
   currentSection: SectionType;
-  resumeUploaded: boolean;
-  setResumeUploaded: (uploaded: boolean) => void;
   setAnalysisStarted: (started: boolean) => void;
   onSectionChange: (section: SectionType) => void;
   analysisData: AnalysisData | null;
   setAnalysisData: (data: AnalysisData | null) => void;
-  jobDataFromHeader?: JobData;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
   currentSection,
-  resumeUploaded,
-  setResumeUploaded,
   setAnalysisStarted,
   onSectionChange,
   analysisData,
-  setAnalysisData,
-  jobDataFromHeader
+  setAnalysisData
 }) => {
   const renderSection = () => {
     switch (currentSection) {
       case 'start':
         return (
           <StartSection
-            resumeUploaded={resumeUploaded}
-            setResumeUploaded={setResumeUploaded}
             setAnalysisStarted={setAnalysisStarted}
             onSectionChange={onSectionChange}
             setAnalysisData={setAnalysisData}
-            jobDataFromHeader={jobDataFromHeader}
           />
         );
-      case 'overview':
-        return <OverviewSection analysisData={analysisData} />;
       case 'keywords':
         return <KeywordsSection analysisData={analysisData} />;
       case 'experience':
@@ -73,22 +61,14 @@ const MainContent: React.FC<MainContentProps> = ({
             onViewDetails={() => onSectionChange('keywords')}
             onUploadNewResume={() => {
               setAnalysisData(null);
-              setResumeUploaded(false);
               setAnalysisStarted(false);
-              // Clear stored resume from localStorage
-              localStorage.removeItem('intrvufit_resume');
+              void clearResume();
               onSectionChange('start');
             }}
           />
         );
       default:
-        return <StartSection
-          resumeUploaded={resumeUploaded}
-          setResumeUploaded={setResumeUploaded}
-          setAnalysisStarted={setAnalysisStarted}
-          onSectionChange={onSectionChange}
-          setAnalysisData={setAnalysisData}
-        />;
+        return null;
     }
   };
 
@@ -102,8 +82,8 @@ const MainContent: React.FC<MainContentProps> = ({
 
       {/* Version info */}
       <div className="text-center text-xs text-gray-400 mt-8">
-        <div>IntrvuFit v0.0.9</div>
-        <div>All rights reserved © 2025 intrvu.ca</div>
+        <div>IntrvuFit v{__APP_VERSION__}</div>
+        <div>All rights reserved © {new Date().getFullYear()} intrvu.ca</div>
       </div>
     </main>
   );

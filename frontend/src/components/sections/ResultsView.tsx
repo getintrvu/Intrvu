@@ -25,8 +25,8 @@ const ResultsView: React.FC<ResultsSectionProps> = ({
     );
   }
 
-  const jobFitScore = analysisData.job_fit_score || { percentage: 0, label: 'Unknown', score: 0 };
-  const resumeQualityScore = analysisData.resume_quality_score || { percentage: 0, label: 'Unknown', score: 0 };
+  const jobFitScore = analysisData.job_fit_score;
+  const resumeQualityScore = analysisData.resume_quality_score;
   const safeJobFitPct = Math.max(0, Math.min(100, Number(jobFitScore.percentage || 0)));
   const safeQualityPct = Math.max(0, Math.min(100, Number(resumeQualityScore.percentage || 0)));
   const safeJobFitLabel = jobFitScore.label || 'Unknown';
@@ -36,7 +36,7 @@ const ResultsView: React.FC<ResultsSectionProps> = ({
 
   // Suggested improvement tip from analysis data or fallback
   const improvementTip = analysisData.detailed_analysis?.keyword_match?.analysis?.suggestedImprovements ||
-    "Your extensive experience in customer experience strategy and stakeholder facilitation aligns well with the Senior Director role...";
+    "Review the Keywords tab to see which terms from the posting your resume is missing.";
 
   const qualityTip =
     analysisData.detailed_analysis?.resume_structure?.analysis?.suggestedImprovements ||

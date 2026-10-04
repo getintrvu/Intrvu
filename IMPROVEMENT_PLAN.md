@@ -1,5 +1,27 @@
 # IntrvuFit — Improvement Plan
 
+## Progress (updated after the rebuild)
+
+The backend and the extension were rebuilt rather than patched, so most of the tasks below were
+done by replacement. Commits: `323b1f7` (quick fixes), `32b272e` (backend rebuild), then the
+extension rebuild.
+
+**Done**
+- Phase 1: no `output.json`, filter endpoint removed (it was a passthrough nobody called), 4 MB / 10 page limits, repo hygiene, secrets scan of history, Supabase Google auth + per-user quota, narrowed manifest (no `<all_urls>`, no localhost hosts, `web_accessible_resources` limited to LinkedIn), validated `postMessage`, account deletion, local-only resume storage (`chrome.storage.local`), consent text on the sign-in screen.
+- Phase 2: real errors instead of fake zeros (quota refunded), no blocking calls in the request path, 2 parallel LLM calls instead of 9, per-call timeout and bounded retries only for transient errors, timeouts sized for Vercel's `maxDuration`, dead `/api/analyze-job` call removed, clear messages for 401/413/429/503/504, loading state.
+- Phase 3: V1-V3 code, LangChain, Redis/Upstash, slowapi, circuit breaker, Docker/Render/Vercel-legacy config and the keepalive cron deleted; pydantic v2 / `pypdf`; ranged dependency pins; tests (backend 35, frontend 25); CI and Dependabot; docs consolidated into three READMEs plus the scoring spec.
+- Phase 4: Vite 7 build with cross-platform scripts, TypeScript content script and worker bundled with esbuild, `dist/` no longer committed, `<all_urls>` injector removed, polling removed, manifest icons, `minimum_chrome_version`, pinned extension id helper, extractor tests against a saved LinkedIn page.
+- Phase 5 (partial): Gemini structured output; deterministic scoring.
+
+**Left to do** (needs you, or a decision)
+1. Create the Supabase project, Google OAuth client and Vercel project; set env vars (see the READMEs). None of this can be done from the repo.
+2. Run one real analysis with a Gemini key and a few real resumes to tune the prompts and pick the model (`LLM_MODEL`). The code path is covered by tests with a fake model only.
+3. Scoring calibration: the V4 caps (for example 25 strong verbs for full action-word marks, or 17.5 strong keywords for full keyword marks) may feel harsh. Build the golden set (5.3) and adjust `scoring.py`.
+4. Education is a 20-point binary gate even when the job does not ask for a degree (as in the V4 spec). Decide whether to keep that.
+5. Test the extension end to end in Chrome on a real LinkedIn page (extraction, panel, Google sign-in); only the extractor and the UI shell were exercised here.
+6. Not done: `chrome.sidePanel` migration (4.3; it cannot auto-open without a user gesture, so it changes behaviour), more job sites (5.5), OCR/DOCX (5.4), observability (5.7), Tailwind 4 and React 19 upgrades.
+
+
 Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 Ordering principle: stop money/data leaks first, then make results trustworthy, then clean up, then modernise, then build features. Each phase ends in a shippable state, and each phase should land as its own commit/PR.

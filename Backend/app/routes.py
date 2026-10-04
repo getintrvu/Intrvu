@@ -11,7 +11,7 @@ from app.config import Settings, get_settings
 from app.errors import bad_request, quota_exceeded
 from app.llm.client import LLM, get_llm
 from app.pdf import extract_resume_text
-from app.quota import QuotaService, get_quota_service
+from app.quota import AccountService, QuotaService, get_account_service, get_quota_service
 from app.schemas import AnalyzeResponse, JobInput, UsageResponse
 from app.text import clean_text
 
@@ -29,6 +29,14 @@ async def health():
 async def usage(user: User = Depends(get_current_user), quota: QuotaService = Depends(get_quota_service)):
     status = await quota.status(user.id)
     return UsageResponse(used=status.used, limit=status.limit, remaining=status.remaining)
+
+
+@router.delete("/v1/account")
+async def delete_account(user: User = Depends(get_current_user), accounts: AccountService = Depends(get_account_service)):
+    """Permanently delete the signed-in user's account and usage data."""
+    await accounts.delete(user.id)
+    logger.info("Deleted account %s", user.id)
+    return {"deleted": True}
 
 
 def _parse_job(raw: str, settings: Settings) -> JobInput:

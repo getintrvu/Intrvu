@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Item } from '../../types/AnalysisData';
 import { AnalysisData } from '../../types/AnalysisData';
 import DetailedAnalysisHeader from '../DetailedAnalysisHeader';
 
@@ -31,7 +32,7 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({ analysisData }) => {
   const partialMatches = Array.isArray(keywordData.analysis?.partialMatches) ? keywordData.analysis.partialMatches : [];
   const missingKeywords = Array.isArray(keywordData.analysis?.missingKeywords) ? keywordData.analysis.missingKeywords : [];
 
-  const toKeywordString = (item: any) => String(item?.keyword ?? item);
+  const toKeywordString = (item: Item) => String(item?.keyword ?? item);
 
   const matchedKeywords = [...strongMatches, ...partialMatches].map(toKeywordString);
   const missingKeywordStrings = missingKeywords.map(toKeywordString);

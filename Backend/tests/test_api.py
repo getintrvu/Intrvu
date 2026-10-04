@@ -160,3 +160,11 @@ def test_cors_allows_only_configured_origins(monkeypatch):
         assert "access-control-allow-origin" not in bad.headers
     finally:
         get_settings.cache_clear()
+
+
+def test_delete_account_requires_auth_and_deletes_the_caller(client, auth, accounts):
+    assert client.delete("/api/v1/account").status_code == 401
+    assert accounts.deleted == []
+    response = client.delete("/api/v1/account", headers=auth)
+    assert response.json() == {"deleted": True}
+    assert accounts.deleted == ["11111111-1111-1111-1111-111111111111"]

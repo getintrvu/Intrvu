@@ -72,3 +72,32 @@ class QuotaService:
 @lru_cache
 def get_quota_service() -> QuotaService:
     return QuotaService(get_settings())
+
+
+class AccountService:
+    """Deletes a user through the Supabase Auth admin API (cascades to their usage rows)."""
+
+    def __init__(self, settings: Settings):
+        self._url = settings.supabase_url.rstrip("/")
+        self._key = settings.supabase_service_role_key
+        self._enabled = settings.auth_required
+
+    async def delete(self, user_id: str) -> None:
+        if not self._enabled:
+            return
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+                response = await client.delete(
+                    f"{self._url}/auth/v1/admin/users/{user_id}",
+                    headers={"apikey": self._key, "Authorization": f"Bearer {self._key}"},
+                )
+            if response.status_code not in (200, 204, 404):  # 404: already gone
+                response.raise_for_status()
+        except httpx.HTTPError as exc:
+            logger.error("Account deletion failed: %s", type(exc).__name__)
+            raise service_unavailable() from exc
+
+
+@lru_cache
+def get_account_service() -> AccountService:
+    return AccountService(get_settings())

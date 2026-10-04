@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Item } from '../../types/AnalysisData';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { AnalysisData } from '../../types/AnalysisData';
 import DetailedAnalysisHeader from '../DetailedAnalysisHeader';
@@ -41,12 +42,12 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ analysisData }) => {
   // Combine all matches for the "Matched" subsection
   const allMatchedSkills = [...hardSkillMatches, ...softSkillMatches];
 
-  const normalizeSkillText = (skill: any) => String(skill?.skill || skill || '').trim();
+  const normalizeSkillText = (skill: Item) => String(skill?.skill || skill || '').trim();
 
   const matchedKeyCounter: Record<string, number> = {};
   const missingKeyCounter: Record<string, number> = {};
 
-  const compactItem = (item: any, type: 'matched' | 'missing') => {
+  const compactItem = (item: Item, type: 'matched' | 'missing') => {
     const isMatched = type === 'matched';
     const label = normalizeSkillText(item) || 'Skill insight unavailable';
     const counterMap = isMatched ? matchedKeyCounter : missingKeyCounter;

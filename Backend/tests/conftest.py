@@ -23,7 +23,7 @@ from app.llm.models import (
     SkillHit, StrongVerbUse, WeakVerbUse,
 )
 from app.main import create_app
-from app.quota import QuotaStatus, get_quota_service
+from app.quota import QuotaStatus, get_account_service, get_quota_service
 
 SECRET = os.environ["SUPABASE_JWT_SECRET"]
 USER_ID = "11111111-1111-1111-1111-111111111111"
@@ -140,6 +140,19 @@ class FakeQuota:
         return QuotaStatus(True, 1, 3)
 
 
+class FakeAccounts:
+    def __init__(self):
+        self.deleted: list[str] = []
+
+    async def delete(self, user_id):
+        self.deleted.append(user_id)
+
+
+@pytest.fixture
+def accounts():
+    return FakeAccounts()
+
+
 @pytest.fixture
 def llm():
     return FakeLLM()
@@ -151,12 +164,13 @@ def quota():
 
 
 @pytest.fixture
-def client(llm, quota):
+def client(llm, quota, accounts):
     get_settings.cache_clear()
     get_verifier.cache_clear()
     app = create_app()
     app.dependency_overrides[get_llm] = lambda: llm
     app.dependency_overrides[get_quota_service] = lambda: quota
+    app.dependency_overrides[get_account_service] = lambda: accounts
     return TestClient(app)
 
 

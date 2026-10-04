@@ -1,55 +1,50 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import LinkedInJobExtractor from './components/LinkedInJobExtractor';
-import { AnalysisData } from './types/AnalysisData';
-import { useJobExtraction } from './hooks/useJobExtraction';
-import { JobData } from './types/JobData';
+import SignInScreen from './auth/SignInScreen';
+import { useAuth } from './auth/AuthProvider';
+import type { AnalysisData } from './types/AnalysisData';
 
-export type SectionType = 'start' | 'overview' | 'keywords' | 'experience' | 'education' | 'skills' | 'structure' | 'action-verbs' | 'measurable-results' | 'bullet-effectiveness' | 'results';
+export type SectionType =
+  | 'start'
+  | 'keywords'
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'structure'
+  | 'action-verbs'
+  | 'measurable-results'
+  | 'bullet-effectiveness'
+  | 'results';
 
 function App() {
+  const { status } = useAuth();
   const [currentSection, setCurrentSection] = useState<SectionType>('start');
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [resumeUploaded, setResumeUploaded] = useState(false);
   const [analysisStarted, setAnalysisStarted] = useState(false);
   const [showFeedbackMenu, setShowFeedbackMenu] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [isAppVisible] = useState(true);
-  const { jobStatus } = useJobExtraction();
-  const [extractedJobData, setExtractedJobData] = useState<JobData | undefined>(undefined);
 
-  const handleJobDataExtracted = (data: JobData) => {
-    console.log('Job data extracted in App:', data);
-    setExtractedJobData(data);
-  };
-
-  // Remove automatic fetching to prevent continuous requests
-  // useEffect(() => {
-  //   // Removed fetchAnalysisData function to prevent continuous API requests
-  // }, [jobStatus.currentJobData]);
-
-  if (!isAppVisible) {
-    return null;
+  if (status === 'loading') {
+    return <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading…</div>;
   }
+  if (status === 'signedOut') return <SignInScreen />;
 
   return (
-    <div className="flex bg-white w-full h-full overflow-hidden">
-      <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+    <div className="flex h-full w-full overflow-hidden bg-white">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
-        <div className="px-4 pt-3 pb-1">
-          <LinkedInJobExtractor onJobDataExtracted={handleJobDataExtracted} />
+        <div className="px-4 pb-1 pt-3">
+          <LinkedInJobExtractor />
         </div>
         <MainContent
           currentSection={currentSection}
           onSectionChange={setCurrentSection}
           analysisData={analysisData}
           setAnalysisData={setAnalysisData}
-          resumeUploaded={resumeUploaded}
-          setResumeUploaded={setResumeUploaded}
           setAnalysisStarted={setAnalysisStarted}
-          jobDataFromHeader={extractedJobData}
         />
       </div>
       <Sidebar
@@ -62,7 +57,7 @@ function App() {
         setShowFeedbackMenu={setShowFeedbackMenu}
       />
     </div>
-  )
+  );
 }
 
 export default App;
