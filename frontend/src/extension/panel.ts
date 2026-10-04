@@ -20,7 +20,11 @@ export class SidePanel {
   /** Set when the user closes the panel, so automatic opening stops for this page session. */
   private dismissedByUser = false;
 
-  constructor(private readonly onVisibilityChange: (visible: boolean) => void) {
+  constructor(
+    private readonly onVisibilityChange: (visible: boolean) => void,
+    /** Reports how far the panel's left edge is from the window's right edge (0 when closed). */
+    private readonly onOffsetChange: (px: number) => void,
+  ) {
     window.addEventListener('message', this.handleFrameMessage);
   }
 
@@ -39,12 +43,14 @@ export class SidePanel {
     if (!auto) this.dismissedByUser = false;
     await this.ensureCreated();
     this.container?.classList.add('intrvu-panel-visible');
+    this.onOffsetChange(this.width);
     this.setVisible(true);
   }
 
   close(byUser = false) {
     if (byUser) this.dismissedByUser = true;
     this.container?.classList.remove('intrvu-panel-visible');
+    this.onOffsetChange(0);
     this.setVisible(false);
   }
 
@@ -122,6 +128,7 @@ export class SidePanel {
     const max = Math.min(MAX_WIDTH, window.innerWidth * 0.5);
     this.width = Math.max(MIN_WIDTH, Math.min(this.startWidth + (this.startX - event.clientX), max));
     if (this.container) this.container.style.width = `${this.width}px`;
+    this.onOffsetChange(this.width);
   };
 
   private stopResize = () => {

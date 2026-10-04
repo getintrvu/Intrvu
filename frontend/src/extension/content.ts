@@ -25,7 +25,10 @@ function main() {
   let debounce: number | undefined;
 
   const launcher = new Launcher(() => panel.toggle());
-  const panel = new SidePanel((visible) => launcher.setPanelVisible(visible));
+  const panel = new SidePanel(
+    (visible) => launcher.setPanelVisible(visible),
+    (offset) => launcher.setOffset(offset),
+  );
 
   const onJobPage = () => isLinkedInJobUrl(location.href);
 

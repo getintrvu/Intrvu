@@ -1,4 +1,4 @@
-/** Floating "Analyze" button shown on LinkedIn job pages. */
+/** Pull-tab docked to the right edge of the window on LinkedIn job pages (styles in launcher-button.css). */
 const BUTTON_ID = 'intrvu-launcher-button';
 const STYLES_ID = 'intrvu-launcher-styles';
 
@@ -12,6 +12,7 @@ const BUTTON_HTML = `
 export class Launcher {
   private button: HTMLButtonElement | null = null;
   private visible = false;
+  private offset = 0;
   private observer: MutationObserver | null = null;
 
   constructor(private readonly onClick: () => void) {}
@@ -27,11 +28,20 @@ export class Launcher {
     this.applyState();
   }
 
+  /** Distance from the right edge in px: the panel's width while it is open, otherwise 0. */
+  setOffset(px: number) {
+    this.offset = px;
+    this.applyState();
+  }
+
   private applyState() {
     if (!this.button) return;
     this.button.classList.toggle('intrvu-launcher-active', this.visible);
-    this.button.setAttribute('aria-pressed', String(this.visible));
+    this.button.setAttribute('aria-expanded', String(this.visible));
+    this.button.style.setProperty('right', `${this.offset}px`, 'important');
     this.button.title = this.visible ? 'Close IntrvuFit Resume Analyzer' : 'Analyze this job against your resume';
+    const label = this.button.querySelector('span');
+    if (label) label.textContent = this.visible ? 'Close' : 'Analyze';
   }
 
   private mount() {
