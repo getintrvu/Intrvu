@@ -1,6 +1,6 @@
 import fixture from './__fixtures__/linkedin-job.html?raw';
 import { extractCompanyName, extractJob, extractJobTitle, findJobDescriptionSection } from './jobExtractor';
-import { isLinkedInJobUrl } from './constants';
+import { isJobPostingUrl, isLinkedInJobUrl } from './constants';
 
 function load(html: string): Document {
   return new DOMParser().parseFromString(html, 'text/html');
@@ -58,5 +58,20 @@ describe('isLinkedInJobUrl', () => {
     [undefined, false],
   ])('%s -> %s', (url, expected) => {
     expect(isLinkedInJobUrl(url)).toBe(expected);
+  });
+});
+
+describe('isJobPostingUrl (auto-open only on a specific posting)', () => {
+  it.each([
+    ['https://www.linkedin.com/jobs/view/4139507733/', true],
+    ['https://www.linkedin.com/jobs/view/4139507733/?trackingId=x', true],
+    ['https://www.linkedin.com/jobs/search/?keywords=python', false],
+    ['https://www.linkedin.com/jobs/search/?currentJobId=4139507733', false],
+    ['https://www.linkedin.com/jobs/collections/recommended/', false],
+    ['https://www.linkedin.com/jobs/', false],
+    ['https://www.linkedin.com/company/acme/jobs/', false],
+    [undefined, false],
+  ])('%s -> %s', (url, expected) => {
+    expect(isJobPostingUrl(url)).toBe(expected);
   });
 });

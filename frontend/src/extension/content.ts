@@ -2,7 +2,7 @@
  * Content script for LinkedIn job pages: extracts the job posting, shows the launcher button,
  * and hosts the side panel. Bundled to a single classic script (see scripts/build-scripts.mjs).
  */
-import { ExtractedJob, MESSAGES, STORAGE_KEYS, isLinkedInJobUrl } from './constants';
+import { ExtractedJob, MESSAGES, STORAGE_KEYS, isJobPostingUrl, isLinkedInJobUrl } from './constants';
 import { expandJobDescription, extractJob } from './jobExtractor';
 import { Launcher } from './launcher';
 import { SidePanel } from './panel';
@@ -64,6 +64,12 @@ function main() {
     return false;
   }
 
+  /** Open the panel by itself only on a specific posting, never on listing pages (search,
+   * collections, jobs home). There the launcher button is still available to open it manually. */
+  function autoOpenIfPosting() {
+    if (isJobPostingUrl(location.href)) void panel.open({ auto: true });
+  }
+
   function scheduleExtract() {
     window.clearTimeout(debounce);
     debounce = window.setTimeout(extractOnce, DEBOUNCE_MS);
@@ -75,7 +81,7 @@ function main() {
     if (onJobPage()) {
       window.clearTimeout(debounce);
       debounce = window.setTimeout(() => void extractWithRetry(8, 350), DEBOUNCE_MS);
-      void panel.open({ auto: true });
+      autoOpenIfPosting();
     } else {
       panel.close();
     }
@@ -101,7 +107,7 @@ function main() {
         sendResponse({ success: true, visible: panel.isVisible });
         return false;
       case MESSAGES.openPanel:
-        void panel.open({ auto: true });
+        void panel.open(); // explicit request (toolbar click on a tab that had no content script)
         sendResponse({ success: true });
         return false;
       case MESSAGES.urlChanged:
@@ -118,7 +124,7 @@ function main() {
   if (onJobPage()) {
     extractOnce();
     for (const delay of [900, 2200, 4000]) setTimeout(() => void extractWithRetry(3, 400), delay);
-    void panel.open({ auto: true });
+    autoOpenIfPosting();
   }
 }
 

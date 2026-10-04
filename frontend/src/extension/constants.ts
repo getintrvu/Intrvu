@@ -30,6 +30,13 @@ export function isLinkedInJobUrl(url: string | undefined | null): boolean {
   return !!url && JOB_URL.test(url);
 }
 
+const JOB_POSTING_URL = /linkedin\.com\/jobs\/view\/\d+/i;
+
+/** A single job posting page. Listing pages (search, collections, the jobs home) are not postings. */
+export function isJobPostingUrl(url: string | undefined | null): boolean {
+  return !!url && JOB_POSTING_URL.test(url);
+}
+
 export interface ExtractedJob {
   url: string;
   jobTitle: string;
