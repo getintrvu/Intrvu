@@ -120,6 +120,8 @@ revoke all on function public.intrvufit_consume_quota(uuid, integer) from public
 revoke all on function public.intrvufit_release_quota(uuid)          from public, anon, authenticated;
 revoke all on function public.intrvufit_get_usage(uuid, integer)     from public, anon, authenticated;
 revoke all on function public.intrvufit_delete_user_data(uuid)       from public, anon, authenticated;
+revoke all on table public.intrvufit_usage_daily                     from anon, authenticated;
+revoke all on table public.intrvufit_users                           from anon, authenticated;
 revoke all on public.intrvufit_profiles                              from public, anon, authenticated;
 grant execute on function public.intrvufit_consume_quota(uuid, integer) to service_role;
 grant execute on function public.intrvufit_release_quota(uuid)          to service_role;
