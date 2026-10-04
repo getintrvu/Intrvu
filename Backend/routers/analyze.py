@@ -72,10 +72,11 @@ async def job_analysis(
         if (resume.content_type != 'application/pdf') or (not resume.filename.lower().endswith('.pdf')):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        resume_content = await resume.read()
-        
-        # Check file size
+        # Read at most one byte over the limit so oversized uploads are not fully buffered
         max_size = settings.max_pdf_size_mb * 1024 * 1024
+        resume_content = await resume.read(max_size + 1)
+
+        # Check file size
         if len(resume_content) > max_size:
             raise HTTPException(
                 status_code=413,
@@ -138,23 +139,6 @@ async def job_analysis(
         process_time = time.time() - start_time
         logger.info(f"Successful resume analysis completed in {process_time:.2f} seconds")
 
-        # Save response to output.json for inspection as requested by user
-        try:
-            response_to_save = {
-                "job_context": {
-                    "title": validated_job_data.jobTitle or "Job Position",
-                    "company": validated_job_data.company or "Company",
-                    "description_length": len(validated_job_data.description)
-                },
-                "analysis": analysis,
-                "process_time_seconds": round(process_time, 2)
-            }
-            with open("output.json", "w") as f:
-                json.dump(response_to_save, f, indent=4)
-            logger.info("Saved response to output.json")
-        except Exception as e:
-            logger.warning(f"Failed to write output.json: {e}")
-
         return {
             "job_context": {
                 "title": validated_job_data.jobTitle or "Job Position",
@@ -203,7 +187,7 @@ async def filter_job_description(request: Request, request_data: FilterJobDescri
     
     try:
         # Validate input is handled by Pydantic
-        raw_text = request.text
+        raw_text = request_data.text
         
         # Apply LLM filtering
         try:

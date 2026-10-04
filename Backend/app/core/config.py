@@ -29,9 +29,10 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, env="DEBUG")
     
     # File Processing Limits
-    max_pdf_size_mb: int = Field(default=50, env="MAX_PDF_SIZE_MB")
-    max_pdf_pages: int = Field(default=100, env="MAX_PDF_PAGES")
-    max_text_length: int = Field(default=100000, env="MAX_TEXT_LENGTH")
+    # 4 MB stays under Vercel's ~4.5 MB request body limit
+    max_pdf_size_mb: int = Field(default=4, env="MAX_PDF_SIZE_MB")
+    max_pdf_pages: int = Field(default=10, env="MAX_PDF_PAGES")
+    max_text_length: int = Field(default=50000, env="MAX_TEXT_LENGTH")
     
     # Caching Settings
     cache_size: int = Field(default=100, env="CACHE_SIZE")
@@ -58,10 +59,6 @@ class Settings(BaseSettings):
     # Authentication Settings
     require_auth: bool = Field(default=False, env="REQUIRE_AUTH")
     valid_api_keys: str = Field(default="", env="VALID_API_KEYS")  # Comma-separated API keys
-    
-    # Security Settings
-    max_file_size_mb: int = Field(default=10, env="MAX_FILE_SIZE_MB")
-    max_text_length: int = Field(default=50000, env="MAX_TEXT_LENGTH")
     
     # Rate Limiting Settings
     rate_limit_per_minute: int = Field(default=10, env="RATE_LIMIT_PER_MINUTE")
