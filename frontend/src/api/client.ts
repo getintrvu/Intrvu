@@ -74,8 +74,9 @@ export function fetchUsage(token: string): Promise<Usage> {
   return request<Usage>('/api/v1/usage', token);
 }
 
-export async function deleteAccount(token: string): Promise<void> {
-  await request<{ deleted: boolean }>('/api/v1/account', token, { method: 'DELETE' });
+/** Deletes IntrvuFit's data for the user. The account itself is shared with other products and is kept. */
+export async function deleteMyData(token: string): Promise<void> {
+  await request<{ deleted: boolean }>('/api/v1/me/data', token, { method: 'DELETE' });
 }
 
 /** Text safe to show to a user. */

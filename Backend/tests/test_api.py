@@ -162,9 +162,9 @@ def test_cors_allows_only_configured_origins(monkeypatch):
         get_settings.cache_clear()
 
 
-def test_delete_account_requires_auth_and_deletes_the_caller(client, auth, accounts):
-    assert client.delete("/api/v1/account").status_code == 401
-    assert accounts.deleted == []
-    response = client.delete("/api/v1/account", headers=auth)
+def test_delete_my_data_requires_auth_and_only_removes_app_data(client, auth, user_data):
+    assert client.delete("/api/v1/me/data").status_code == 401
+    assert user_data.deleted == []
+    response = client.delete("/api/v1/me/data", headers=auth)
     assert response.json() == {"deleted": True}
-    assert accounts.deleted == ["11111111-1111-1111-1111-111111111111"]
+    assert user_data.deleted == ["11111111-1111-1111-1111-111111111111"]

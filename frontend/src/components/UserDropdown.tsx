@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
-import { deleteAccount, userMessage } from '../api/client';
+import { deleteMyData, userMessage } from '../api/client';
 import { useUsage } from '../hooks/useUsage';
 import { STORAGE_KEYS } from '../extension/constants';
 import { removeItems } from '../lib/storage';
@@ -23,7 +23,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
     setBusy(true);
     setError(null);
     try {
-      await deleteAccount(await getToken());
+      await deleteMyData(await getToken());
       await removeItems(STORAGE_KEYS.resume, STORAGE_KEYS.jobData, STORAGE_KEYS.jobExtractedAt);
       await signOut();
     } catch (err) {
@@ -55,12 +55,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
               onClick={() => setConfirmingDelete(true)}
               className={`${itemClass} text-red-600 hover:bg-red-50 active:bg-red-100`}
             >
-              Delete my account &amp; data
+              Delete my IntrvuFit data
             </button>
           ) : (
             <div className="rounded border border-red-200 bg-red-50 p-3">
               <p className="mb-2 text-xs text-red-700">
-                This permanently deletes your account and removes your saved resume from this browser.
+                This deletes your IntrvuFit usage data and the resume saved in this browser, then signs you out. Your account stays active for your other products.
               </p>
               <div className="flex gap-2">
                 <button

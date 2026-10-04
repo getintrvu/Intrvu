@@ -42,7 +42,7 @@ class QuotaService:
             self._client = httpx.AsyncClient(timeout=httpx.Timeout(5.0), headers=self._headers)
         return self._client
 
-    async def _rpc(self, name: str, payload: dict) -> dict:
+    async def rpc(self, name: str, payload: dict) -> dict:
         if not self._enabled:
             return {"allowed": True, "used": 0, "limit": self._limit}
         try:
@@ -54,18 +54,18 @@ class QuotaService:
             raise service_unavailable() from exc
 
     async def consume(self, user_id: str) -> QuotaStatus:
-        data = await self._rpc("consume_quota", {"p_user_id": user_id, "p_limit": self._limit})
+        data = await self.rpc("intrvufit_consume_quota", {"p_user_id": user_id, "p_limit": self._limit})
         return QuotaStatus(bool(data["allowed"]), int(data["used"]), int(data["limit"]))
 
     async def release(self, user_id: str) -> None:
         """Give back a unit after a failed analysis. Best effort: never raises."""
         try:
-            await self._rpc("release_quota", {"p_user_id": user_id})
+            await self.rpc("intrvufit_release_quota", {"p_user_id": user_id})
         except Exception:
             logger.warning("Could not release quota for a failed analysis")
 
     async def status(self, user_id: str) -> QuotaStatus:
-        data = await self._rpc("get_usage", {"p_user_id": user_id, "p_limit": self._limit})
+        data = await self.rpc("intrvufit_get_usage", {"p_user_id": user_id, "p_limit": self._limit})
         return QuotaStatus(True, int(data["used"]), int(data["limit"]))
 
 
@@ -74,30 +74,17 @@ def get_quota_service() -> QuotaService:
     return QuotaService(get_settings())
 
 
-class AccountService:
-    """Deletes a user through the Supabase Auth admin API (cascades to their usage rows)."""
+class UserDataService:
+    """Deletes what IntrvuFit stores about a user. The Supabase auth user is deliberately NOT
+    deleted: accounts are shared with other products."""
 
-    def __init__(self, settings: Settings):
-        self._url = settings.supabase_url.rstrip("/")
-        self._key = settings.supabase_service_role_key
-        self._enabled = settings.auth_required
+    def __init__(self, quota: QuotaService):
+        self._quota = quota
 
     async def delete(self, user_id: str) -> None:
-        if not self._enabled:
-            return
-        try:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
-                response = await client.delete(
-                    f"{self._url}/auth/v1/admin/users/{user_id}",
-                    headers={"apikey": self._key, "Authorization": f"Bearer {self._key}"},
-                )
-            if response.status_code not in (200, 204, 404):  # 404: already gone
-                response.raise_for_status()
-        except httpx.HTTPError as exc:
-            logger.error("Account deletion failed: %s", type(exc).__name__)
-            raise service_unavailable() from exc
+        await self._quota.rpc("intrvufit_delete_user_data", {"p_user_id": user_id})
 
 
 @lru_cache
-def get_account_service() -> AccountService:
-    return AccountService(get_settings())
+def get_user_data_service() -> UserDataService:
+    return UserDataService(get_quota_service())

@@ -55,4 +55,4 @@ It writes `key.pem` (keep it private and backed up), and prints the `EXTENSION_P
 
 ## Privacy
 
-The resume PDF is kept in `chrome.storage.local` on the user's device so it survives reopening the panel, and is sent to the backend only when **Analyze** is clicked. "Delete my account & data" in the user menu deletes the Supabase account and clears local data.
+The resume PDF is kept in `chrome.storage.local` on the user's device so it survives reopening the panel, and is sent to the backend only when **Analyze** is clicked. "Delete my IntrvuFit data" in the user menu deletes IntrvuFit's server-side data for the user and clears local data. The Supabase account itself is shared with other products and is not deleted.

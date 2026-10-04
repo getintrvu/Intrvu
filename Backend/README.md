@@ -16,7 +16,7 @@ FastAPI service for the IntrvuFit Chrome extension. Deployed on Vercel (Python r
 |---|---|---|---|
 | GET | `/api/health` | no | |
 | GET | `/api/v1/usage` | yes | `{used, limit, remaining}` for today |
-| DELETE | `/api/v1/account` | yes | permanently deletes the caller's Supabase account (their usage rows cascade) |
+| DELETE | `/api/v1/me/data` | yes | deletes IntrvuFit's data for the caller (usage rows). The shared Supabase account is kept |
 | POST | `/api/v1/analyze` | yes | multipart: `resume` (PDF, max 4 MB) and `jobData` (JSON string: `jobTitle`, `company`, `description` >= 100 chars) |
 
 Errors always look like `{"error": {"code": "...", "message": "..."}}`. Codes: `unauthorized`, `invalid_pdf`, `encrypted_pdf`, `no_text_in_pdf`, `file_too_large`, `invalid_job_data`, `quota_exceeded`, `llm_busy`, `analysis_failed`, `service_unavailable`, `internal_error`.
@@ -35,7 +35,7 @@ The tests use fakes for Gemini and Supabase and need no keys or network.
 
 ## Deploy (Vercel)
 
-1. Create the Supabase project, enable the Google provider, and run `supabase/migrations/0001_init.sql` in the SQL editor.
+1. Use the Supabase project shared with the other products (or a new one), enable the Google provider, and run `supabase/migrations/0001_init.sql` in the SQL editor.
 2. Import the repo in Vercel with **Root Directory = `Backend`**.
 3. Set the environment variables from `.env.example` (`GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CHROME_EXTENSION_IDS`, `ENVIRONMENT=production`).
 4. `vercel.json` sets `maxDuration` to 60 s. Check your plan's limit.

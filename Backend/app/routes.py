@@ -11,7 +11,7 @@ from app.config import Settings, get_settings
 from app.errors import bad_request, quota_exceeded
 from app.llm.client import LLM, get_llm
 from app.pdf import extract_resume_text
-from app.quota import AccountService, QuotaService, get_account_service, get_quota_service
+from app.quota import QuotaService, UserDataService, get_quota_service, get_user_data_service
 from app.schemas import AnalyzeResponse, JobInput, UsageResponse
 from app.text import clean_text
 
@@ -31,11 +31,11 @@ async def usage(user: User = Depends(get_current_user), quota: QuotaService = De
     return UsageResponse(used=status.used, limit=status.limit, remaining=status.remaining)
 
 
-@router.delete("/v1/account")
-async def delete_account(user: User = Depends(get_current_user), accounts: AccountService = Depends(get_account_service)):
-    """Permanently delete the signed-in user's account and usage data."""
-    await accounts.delete(user.id)
-    logger.info("Deleted account %s", user.id)
+@router.delete("/v1/me/data")
+async def delete_my_data(user: User = Depends(get_current_user), data: UserDataService = Depends(get_user_data_service)):
+    """Delete everything IntrvuFit stores about the signed-in user. The shared account is kept."""
+    await data.delete(user.id)
+    logger.info("Deleted IntrvuFit data for %s", user.id)
     return {"deleted": True}
 
 
