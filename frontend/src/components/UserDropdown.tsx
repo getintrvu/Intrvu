@@ -24,7 +24,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
     setError(null);
     try {
       await deleteMyData(await getToken());
-      await removeItems(STORAGE_KEYS.resume, STORAGE_KEYS.jobData, STORAGE_KEYS.jobExtractedAt);
+      await removeItems(STORAGE_KEYS.resume, STORAGE_KEYS.analysisCache, STORAGE_KEYS.jobData, STORAGE_KEYS.jobExtractedAt);
       await signOut();
     } catch (err) {
       setError(userMessage(err));

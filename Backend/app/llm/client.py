@@ -55,6 +55,7 @@ class GeminiLLM:
             response_mime_type="application/json",
             response_schema=schema,
             temperature=0.0,
+            seed=self._settings.llm_seed,
             # We never use tools; stop the SDK from running its function-calling loop.
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )

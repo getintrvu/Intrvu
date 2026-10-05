@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { clearAnalysisCache } from '../lib/analysisCache';
 import { signInWithGoogle, supabase } from '../lib/supabase';
 
 type Status = 'loading' | 'signedOut' | 'signedIn';
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: session?.user.email ?? null,
       signIn: signInWithGoogle,
       signOut: async () => {
+        await clearAnalysisCache(); // saved results contain resume details: never leave them for the next user
         await supabase.auth.signOut();
       },
       getToken,

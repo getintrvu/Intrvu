@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   jobExtractedAt: 'lastExtracted',
   panelWidth: 'intrvu_panel_width',
   resume: 'intrvufit_resume',
+  analysisCache: 'intrvufit_analysis_cache',
 } as const;
 
 /** chrome.runtime / chrome.tabs messages. */

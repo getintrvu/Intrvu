@@ -7,6 +7,7 @@ import { analyzeResume, userMessage } from '../../api/client';
 import { useJobData } from '../../hooks/useJobData';
 import { useUsage } from '../../hooks/useUsage';
 import { MAX_PDF_BYTES, MAX_PDF_MB, MIN_JOB_DESCRIPTION_CHARS } from '../../lib/config';
+import { analysisKey, getCachedAnalysis, saveAnalysis, type CachedAnalysis } from '../../lib/analysisCache';
 import { clearResume, loadResume, saveResume } from '../../lib/resumeStore';
 
 interface StartSectionProps {
@@ -38,6 +39,7 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
   const [dragOver, setDragOver] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cached, setCached] = useState<CachedAnalysis | null>(null);
 
   // Restore the resume from the last session.
   useEffect(() => {
@@ -70,17 +72,44 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
     void clearResume();
   };
 
+  // Look for a saved result for this exact resume and job description.
+  const jobDescription = job?.jobDescription;
+  useEffect(() => {
+    let active = true;
+    setCached(null);
+    if (file && jobDescription) {
+      analysisKey(file, jobDescription)
+        .then(getCachedAnalysis)
+        .then((entry) => active && setCached(entry))
+        .catch(() => undefined);
+    }
+    return () => {
+      active = false;
+    };
+  }, [file, jobDescription]);
+
   const descriptionLength = job?.jobDescription?.length ?? 0;
   const hasEnoughDescription = descriptionLength >= MIN_JOB_DESCRIPTION_CHARS;
   const outOfQuota = usage !== null && usage.remaining === 0;
-  const canAnalyze = !!file && !!job && hasEnoughDescription && !isAnalyzing && !outOfQuota;
+  const ready = !!file && !!job && hasEnoughDescription && !isAnalyzing;
+  // Viewing a saved result costs nothing, so it does not depend on the daily quota.
+  const canAnalyze = ready && (!outOfQuota || !!cached);
 
-  const handleAnalyze = async () => {
+  const showResult = (data: AnalysisData) => {
+    setAnalysisData(data);
+    setAnalysisStarted(true);
+    onSectionChange('results');
+  };
+
+  /** `fresh` skips the saved result and runs a new analysis (which replaces it). */
+  const handleAnalyze = async (fresh = false) => {
     if (!file || !job) return;
+    if (cached && !fresh) return showResult(cached.data);
     setIsAnalyzing(true);
     setError(null);
     try {
       const result = await analyzeResume(file, job, await getToken());
+      void analysisKey(file, job.jobDescription).then((key) => saveAnalysis(key, result));
       setAnalysisData(result);
       setAnalysisStarted(true);
       onSectionChange('results');
@@ -156,7 +185,7 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
       </div>
 
       <button
-        onClick={handleAnalyze}
+        onClick={() => void handleAnalyze()}
         disabled={!canAnalyze}
         className={`mb-2 w-full rounded-lg px-6 py-3 text-base font-medium transition-all duration-200 ${
           canAnalyze
@@ -169,10 +198,25 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
             <Loader2 className="h-5 w-5 animate-spin" />
             Analyzing… this can take up to a minute
           </span>
+        ) : cached ? (
+          'View saved result'
         ) : (
           'Analyze'
         )}
       </button>
+
+      {cached && !isAnalyzing && (
+        <p className="mb-2 text-center text-xs text-gray-500">
+          Saved result from {new Date(cached.savedAt).toLocaleString()}. The same resume and job always give the same result.{' '}
+          <button
+            onClick={() => void handleAnalyze(true)}
+            disabled={!ready || outOfQuota}
+            className="underline hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Run a fresh analysis
+          </button>
+        </p>
+      )}
 
       {usage && (
         <p className="mb-6 text-center text-xs text-gray-500">
