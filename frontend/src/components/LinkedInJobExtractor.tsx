@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import './LinkedInJobExtractor.css';
 import { MESSAGES, isLinkedInJobUrl } from '../extension/constants';
 import { useJobData } from '../hooks/useJobData';
+import type { JobData } from '../types/JobData';
 
 type Phase = 'checking' | 'notJobPage' | 'extracting' | 'ready' | 'failed';
 
@@ -19,6 +20,29 @@ async function requestExtraction(tabId: number): Promise<void> {
     await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
   }
   await send(MESSAGES.extractNow);
+}
+
+interface View {
+  icon: string;
+  title: string;
+  detail?: string;
+  css: string;
+}
+
+/** Plain-language description of what was captured, so users can see what will be analyzed. */
+function describeJob(job: JobData): View {
+  const words = job.jobDescription.trim().split(/\s+/).length.toLocaleString();
+  const captured = `${words} words of the job description captured`;
+  if (job.jobTitle && job.company) {
+    return { icon: '✅', title: 'Job detected', detail: `${job.jobTitle} at ${job.company} · ${captured}`, css: 'status-valid' };
+  }
+  const missing = !job.jobTitle && !job.company ? 'job title and company' : !job.jobTitle ? 'job title' : 'company';
+  return {
+    icon: '✅',
+    title: 'Job description detected',
+    detail: `${captured}. We could not read the ${missing}, which does not affect the analysis.`,
+    css: 'status-warning',
+  };
 }
 
 /** Status chip showing which job the analysis will use. The content script does the extracting
@@ -60,23 +84,48 @@ const LinkedInJobExtractor: React.FC = () => {
   else if (failed) phase = 'failed';
   else if (onJobPage) phase = 'extracting';
 
-  const view: Record<Phase, { icon: string; text: string; css: string }> = {
-    checking: { icon: '🔄', text: 'Checking page…', css: 'status-checking' },
-    notJobPage: { icon: '❌', text: 'Navigate to a LinkedIn job page', css: 'status-invalid' },
-    extracting: { icon: '🔄', text: retrying ? 'Extracting job details…' : 'Waiting for the job description…', css: 'status-extracting' },
-    ready: { icon: '✅', text: job ? `${job.jobTitle} at ${job.company}` : '', css: 'status-valid' },
-    failed: { icon: '❌', text: 'Could not read the job description', css: 'status-invalid' },
+  const views: Record<Exclude<Phase, 'ready'>, View> = {
+    checking: { icon: '🔄', title: 'Checking this page…', css: 'status-checking' },
+    notJobPage: {
+      icon: 'ℹ️',
+      title: 'Open a LinkedIn job posting',
+      detail: 'Go to a job on linkedin.com/jobs and this panel will pick up the description automatically.',
+      css: 'status-invalid',
+    },
+    extracting: {
+      icon: '🔄',
+      title: retrying ? 'Reading the job description…' : 'Looking for the job description…',
+      detail: 'This can take a few seconds while LinkedIn loads the posting.',
+      css: 'status-extracting',
+    },
+    failed: {
+      icon: '⚠️',
+      title: 'Could not read the job description',
+      detail: 'Scroll the page so the full description is visible, then try again.',
+      css: 'status-invalid',
+    },
   };
-  const { icon, text, css } = view[phase];
+  const { icon, title, detail, css } = job ? describeJob(job) : views[phase as Exclude<Phase, 'ready'>];
 
   return (
     <div className="linkedin-job-extractor-compact">
       <div className={`compact-status-indicator ${css}`} role="status">
-        <span className="status-icon">{icon}</span>
-        <span className="status-text">{text}</span>
-        {(phase === 'extracting' || phase === 'failed') && (
-          <button className="compact-refresh-btn" onClick={retry} disabled={retrying} title="Try again" aria-label="Try extracting again">
-            🔄
+        <span className="status-icon" aria-hidden="true">
+          {icon}
+        </span>
+        <span className="status-body">
+          <span className="status-title">{title}</span>
+          {detail && <span className="status-detail">{detail}</span>}
+        </span>
+        {(phase === 'extracting' || phase === 'failed' || phase === 'ready') && (
+          <button
+            className="compact-refresh-btn"
+            onClick={retry}
+            disabled={retrying}
+            title="Read the page again"
+            aria-label="Read the job description again"
+          >
+            {retrying ? '…' : 'Refresh'}
           </button>
         )}
       </div>

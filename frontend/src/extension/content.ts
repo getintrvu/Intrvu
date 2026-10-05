@@ -14,6 +14,7 @@ declare global {
 }
 
 const DEBOUNCE_MS = 500;
+const STALE_WINDOW_MS = 6000;
 
 function main() {
   // The background worker re-injects this script into open tabs after install/update.
@@ -21,6 +22,10 @@ function main() {
   window.__INTRVU_LOADED__ = true;
 
   let lastKey = '';
+  // After in-page navigation LinkedIn keeps showing the previous job for a moment. Ignore a result
+  // identical to the previous job until this deadline, so the old description is not re-captured.
+  let staleKey = '';
+  let staleUntil = 0;
   let current: ExtractedJob | null = null;
   let debounce: number | undefined;
 
@@ -51,6 +56,7 @@ function main() {
     const job = extractJob(document);
     if (!job) return false;
     const key = `${job.jobTitle}|${job.company}|${job.jobDescription}`;
+    if (key === staleKey && Date.now() < staleUntil) return false;
     if (key !== lastKey) {
       lastKey = key;
       publish(job);
@@ -79,6 +85,8 @@ function main() {
   }
 
   function handleNavigation() {
+    staleKey = lastKey;
+    staleUntil = Date.now() + STALE_WINDOW_MS;
     clearJob();
     launcher.setActive(onJobPage());
     if (onJobPage()) {

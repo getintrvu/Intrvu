@@ -56,8 +56,8 @@ async function request<T>(path: string, token: string, init: RequestInit = {}, t
 /** Maps the extension's job shape to what the API accepts. */
 export function toJobPayload(job: JobData) {
   return {
-    jobTitle: job.jobTitle,
-    company: job.company,
+    jobTitle: job.jobTitle || undefined, // empty when LinkedIn's markup hid it; the API has defaults
+    company: job.company || undefined,
     description: job.jobDescription,
     url: job.url,
   };
