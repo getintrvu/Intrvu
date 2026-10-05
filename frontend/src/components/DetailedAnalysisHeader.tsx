@@ -15,7 +15,7 @@ const DetailedAnalysisHeader: React.FC<DetailedAnalysisHeaderProps> = ({ analysi
 
   return (
     <header className="mx-auto mb-3 flex w-full max-w-4xl flex-wrap items-end justify-between gap-x-4 gap-y-2.5 border-b border-gray-100 pb-3">
-      <h1 className="text-2xl font-black tracking-tight text-[#1e293b]">Detailed Analysis</h1>
+      <h1 className="text-xl font-bold tracking-tight text-[#1e293b]">Detailed Analysis</h1>
 
       <div className="flex flex-col items-start gap-1.5">
         <div className="flex items-center gap-2">

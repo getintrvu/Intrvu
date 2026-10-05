@@ -50,19 +50,19 @@ const BulletEffectivenessSection: React.FC<BulletEffectivenessSectionProps> = ({
 
             {/* Main Content Area */}
             <div className="mt-2">
-                <h2 className="text-xl font-black text-[#1e293b] mb-3 tracking-tight">Bullet Point Analysis</h2>
+                <h2 className="text-[17px] font-bold text-[#1e293b] mb-3 tracking-tight">Bullet Point Analysis</h2>
 
                 <div className="space-y-4">
                     <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
                         <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-4 border border-[#d1d5db]">
                             <span className="text-[13px] font-semibold text-[#475569]">Effective Bullet Percentage:</span>
-                            <span className="text-[13px] font-black text-[#1e293b]">{safeEffectivePct}%</span>
+                            <span className="text-[13px] font-bold text-[#1e293b]">{safeEffectivePct}%</span>
                         </div>
 
                     {/* Effective Bullets */}
                     {effectiveBullets.length > 0 && (
                         <div>
-                            <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Effective Bullets</h3>
+                            <h3 className="text-sm font-semibold text-[#475569] mb-2">Effective Bullets</h3>
 
                             <div className="space-y-2.5">
                                     {effectiveBullets.map((bullet) => {
@@ -109,7 +109,7 @@ const BulletEffectivenessSection: React.FC<BulletEffectivenessSectionProps> = ({
                     {/* Ineffective Bullets */}
                     {ineffectiveBullets.length > 0 && (
                         <div>
-                            <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Action Required</h3>
+                            <h3 className="text-sm font-semibold text-[#475569] mb-2">Action Required</h3>
 
                             <div className="space-y-2.5">
                                     {ineffectiveBullets.map((bullet) => {
@@ -160,7 +160,7 @@ const BulletEffectivenessSection: React.FC<BulletEffectivenessSectionProps> = ({
                     {/* Suggestions */}
                     {suggestionsList.length > 0 && (
                         <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-                            <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Suggestions</h3>
+                            <h3 className="text-sm font-semibold text-[#475569] mb-2">Suggestions</h3>
                             <div className="space-y-2">
                                 {suggestionsList.map((suggestion) => {
                                     const suggestionText = suggestion.endsWith('.') ? suggestion : `${suggestion}.`;

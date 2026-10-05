@@ -84,18 +84,18 @@ const ActionVerbsSection: React.FC<ActionVerbsSectionProps> = ({ analysisData })
 
       {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-3 tracking-tight">Action Verbs Analysis</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-3 tracking-tight">Action Verbs Analysis</h2>
 
         <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
           <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-4 border border-[#d1d5db]">
             <span className="text-[13px] font-semibold text-[#475569]">Action Verbs Percentage :</span>
-            <span className="text-[13px] font-black text-[#1e293b]">{safeVerbPercentage} %</span>
+            <span className="text-[13px] font-bold text-[#1e293b]">{safeVerbPercentage} %</span>
           </div>
 
           <div className="space-y-4">
             {/* Strong Action Verbs Section */}
             <section>
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Strong Action Verbs</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Strong Action Verbs</h3>
               <div className="space-y-2.5">
                 {strongActionVerbs.length > 0 ? (
                   strongActionVerbs.map((item) => renderVerbCard(item, 'strong'))
@@ -107,7 +107,7 @@ const ActionVerbsSection: React.FC<ActionVerbsSectionProps> = ({ analysisData })
 
             {/* Weak Action Verbs Section */}
             <section>
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Weak Action Verbs</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Weak Action Verbs</h3>
               <div className="space-y-2.5">
                 {weakActionVerbs.length > 0 ? (
                   weakActionVerbs.map((item) => renderVerbCard(item, 'weak'))
@@ -119,7 +119,7 @@ const ActionVerbsSection: React.FC<ActionVerbsSectionProps> = ({ analysisData })
 
             {/* Missing Action Verbs Section */}
             <section>
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Missing Action Verbs</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Missing Action Verbs</h3>
               {missingActionVerbs.length > 0 ? (
                 <div className="space-y-2.5">
                   {missingActionVerbs.map((item) => {
@@ -147,7 +147,7 @@ const ActionVerbsSection: React.FC<ActionVerbsSectionProps> = ({ analysisData })
         {/* Suggestions Section */}
         <div className="mt-4">
           <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-            <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Suggestions</h3>
+            <h3 className="text-sm font-semibold text-[#475569] mb-2">Suggestions</h3>
             <div className="space-y-2">
               {suggestionsList.length > 0 ? (
                 suggestionsList.map((suggestion) => {

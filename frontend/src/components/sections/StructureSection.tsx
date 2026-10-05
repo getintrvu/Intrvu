@@ -60,24 +60,24 @@ const StructureSection: React.FC<StructureSectionProps> = ({ analysisData }) => 
 
       {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-3 tracking-tight">Resume Structure Analysis</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-3 tracking-tight">Resume Structure Analysis</h2>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-[#eef2ff] border border-[#e0e7ff] rounded-xl p-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#4338ca] opacity-80">Must-Have Coverage</p>
-              <p className="text-[15px] font-black text-[#1e293b] mt-1">{completedMustHave}/{totalMustHave} ({mustHavePct}%)</p>
+              <p className="text-sm font-bold text-[#1e293b] mt-1">{completedMustHave}/{totalMustHave} ({mustHavePct}%)</p>
             </div>
             <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#475569] opacity-80">Nice-to-Have Coverage</p>
-              <p className="text-[15px] font-black text-[#1e293b] mt-1">{completedNiceToHave}/{totalNiceToHave} ({niceToHavePct}%)</p>
+              <p className="text-sm font-bold text-[#1e293b] mt-1">{completedNiceToHave}/{totalNiceToHave} ({niceToHavePct}%)</p>
             </div>
           </div>
 
           {/* Section Status Area */}
           <div>
             <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Section Status</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Section Status</h3>
 
               <div className="space-y-2">
                 {structureData.analysis.sectionStatus.map((section, index) => {

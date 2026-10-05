@@ -45,26 +45,26 @@ const EducationSection: React.FC<EducationSectionProps> = ({ analysisData }) => 
       <DetailedAnalysisHeader analysisData={analysisData} />
 
       <div className="mt-2">
-        <h2 className="mb-4 text-xl font-black tracking-tight text-[#1e293b]">Education Alignment</h2>
+        <h2 className="mb-4 text-[17px] font-bold tracking-tight text-[#1e293b]">Education Alignment</h2>
 
         <div className="rounded-2xl border border-[#e2e8f0] bg-[#f1f5f9] p-4">
           <div className="mb-4 flex items-center justify-between rounded-xl border border-[#d1d5db] bg-[#e5e7eb] px-4 py-3">
             <span className="text-[13px] font-semibold text-[#475569]">Alignment Percentage :</span>
-            <span className="text-[13px] font-black text-[#1e293b]">
+            <span className="text-[13px] font-bold text-[#1e293b]">
               {percentage}% ( {score.rating} )
             </span>
           </div>
 
           <div className="space-y-5">
             <section>
-              <h3 className="mb-2 text-[15px] font-extrabold text-[#475569]">Matched</h3>
+              <h3 className="mb-2 text-sm font-semibold text-[#475569]">Matched</h3>
               <div className="space-y-2.5">
                 {score.passed && degreeLabel ? <Row text={degreeLabel} matched /> : <Empty text="No matched education found." />}
               </div>
             </section>
 
             <section>
-              <h3 className="mb-2 text-[15px] font-extrabold text-[#475569]">Missing</h3>
+              <h3 className="mb-2 text-sm font-semibold text-[#475569]">Missing</h3>
               <div className="space-y-2.5">
                 {score.passed ? (
                   <Empty text="No missing requirements." />

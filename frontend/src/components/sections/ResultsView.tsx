@@ -47,7 +47,7 @@ const ResultsView: React.FC<ResultsSectionProps> = ({
     <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col min-h-full">
       {/* Page Title Section */}
       <div className="text-center mb-6">
-        <h1 className="text-[24px] font-black text-[#1e293b] mb-1 tracking-tight">
+        <h1 className="text-[22px] font-bold text-[#1e293b] mb-1 tracking-tight">
           Resume Analysis Results
         </h1>
         <p className="text-[#64748b] text-sm font-medium">
@@ -87,7 +87,7 @@ const ResultsView: React.FC<ResultsSectionProps> = ({
               ))}
               {/* Actual Percentage Float */}
               <div
-                className="absolute -top-1 font-black text-[#1e293b] text-xs"
+                className="absolute -top-1 font-bold text-[#1e293b] text-xs"
                 style={{ left: `calc(${safeJobFitPct}% - 12px)` }}
               >
                 {safeJobFitPct}%
@@ -129,7 +129,7 @@ const ResultsView: React.FC<ResultsSectionProps> = ({
                 style={{ width: `${safeQualityPct}%` }}
               />
             </div>
-            <div className="text-right text-xs font-black text-[#1e293b]">
+            <div className="text-right text-xs font-bold text-[#1e293b]">
               {safeQualityPct}% ({resumeQualityScore.label || 'Unknown'})
             </div>
           </div>

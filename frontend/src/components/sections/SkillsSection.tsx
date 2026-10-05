@@ -79,14 +79,14 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ analysisData }) => {
 
       {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-4 tracking-tight">Skills Match</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-4 tracking-tight">Skills Match</h2>
 
         <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
 
           {/* Match Percentage Section */}
           <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-4 border border-[#d1d5db]">
             <span className="text-[13px] font-semibold text-[#475569]">Match percentage</span>
-            <span className="text-[13px] font-black text-[#1e293b]">
+            <span className="text-[13px] font-bold text-[#1e293b]">
               {safeMatchPct}% ( {safeRating} )
             </span>
           </div>
@@ -94,12 +94,12 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ analysisData }) => {
           <div className="space-y-5">
             {/* Strong Matches Section */}
             <section>
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-3">Strong Matches</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-3">Strong Matches</h3>
 
               <div className="space-y-5">
                 {/* Matched Subsection */}
                 <div className="space-y-2.5">
-                  <h4 className="text-[15px] font-extrabold text-[#475569]">Matched</h4>
+                  <h4 className="text-sm font-semibold text-[#475569]">Matched</h4>
                   <div className="space-y-2.5">
                     {allMatchedSkills.map((skill) => compactItem(skill, 'matched'))}
                     {allMatchedSkills.length === 0 && (
@@ -112,7 +112,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ analysisData }) => {
 
                 {/* Missing Subsection */}
                 <div className="space-y-2.5">
-                  <h4 className="text-[15px] font-extrabold text-[#475569]">Missing</h4>
+                  <h4 className="text-sm font-semibold text-[#475569]">Missing</h4>
                   <div className="space-y-2.5">
                     {missingSkills.map((skill) => compactItem(skill, 'missing'))}
                     {missingSkills.length === 0 && (
