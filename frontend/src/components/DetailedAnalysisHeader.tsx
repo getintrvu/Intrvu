@@ -1,52 +1,37 @@
 import React from 'react';
-import { TrendingUp, CheckCircle2 } from 'lucide-react';
-import { AnalysisData } from '../types/AnalysisData';
-import { getScoreSymbol, getScoreTone, getToneClasses } from '../utils/scoreDisplay';
+import { TrendingUp } from 'lucide-react';
+import type { AnalysisData } from '../types/AnalysisData';
+import ScoreBadge from './ScoreBadge';
 
 interface DetailedAnalysisHeaderProps {
-    analysisData: AnalysisData | null;
+  analysisData: AnalysisData | null;
 }
 
+/** Page title with the two overall results. In a narrow panel the badges wrap under the title;
+ * when the panel is dragged wide they sit on the same row, to the right. */
 const DetailedAnalysisHeader: React.FC<DetailedAnalysisHeaderProps> = ({ analysisData }) => {
-    const jobFit = analysisData?.job_fit_score;
-    const resumeQuality = analysisData?.resume_quality_score;
+  const jobFitLabel = analysisData?.job_fit_score?.label || 'In Progress';
+  const qualityLabel = analysisData?.resume_quality_score?.label || 'In Progress';
 
-    const jobFitLabel = jobFit?.label || 'In Progress';
-    const qualityLabel = resumeQuality?.label || 'In Progress';
+  return (
+    <header className="mx-auto mb-3 flex w-full max-w-4xl flex-wrap items-end justify-between gap-x-4 gap-y-2.5 border-b border-gray-100 pb-3">
+      <h1 className="text-2xl font-black tracking-tight text-[#1e293b]">Detailed Analysis</h1>
 
-    const jobFitClasses = getToneClasses(getScoreTone(jobFitLabel));
-    const qualityClasses = getToneClasses(getScoreTone(qualityLabel));
-
-    return (
-        <header className="flex items-end justify-between gap-3 mb-3 border-b border-gray-100 pb-2 w-full max-w-4xl mx-auto">
-            <h1 className="text-2xl font-black text-[#1e293b] tracking-tight whitespace-nowrap">Detailed Analysis</h1>
-
-            <div className="flex flex-col gap-1.5 items-end">
-                {/* Job Fit Badge */}
-                <div className="flex items-center justify-end gap-3">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#64748b]">
-                        <TrendingUp className="w-4 h-4 text-[#4f46e5]" />
-                        <span>Job Fit</span>
-                    </div>
-                    <div className={`px-4 py-1.5 rounded-full border text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 min-w-[140px] justify-center ${jobFitClasses.bg} ${jobFitClasses.text} ${jobFitClasses.border}`}>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>{getScoreSymbol(jobFitLabel)}</span>
-                        {jobFitLabel}
-                    </div>
-                </div>
-
-                {/* Resume Quality Badge */}
-                <div className="flex items-center justify-end gap-3">
-                    <div className="text-xs font-bold text-[#64748b]">Resume Quality</div>
-                    <div className={`px-4 py-1.5 rounded-full border text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 min-w-[140px] justify-center ${qualityClasses.bg} ${qualityClasses.text} ${qualityClasses.border}`}>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>{getScoreSymbol(qualityLabel)}</span>
-                        {qualityLabel}
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
+      <div className="flex flex-col items-start gap-1.5">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 text-xs font-medium text-[#64748b]">
+            <TrendingUp className="h-3.5 w-3.5 text-[#4f46e5]" aria-hidden="true" />
+            Job Fit
+          </span>
+          <ScoreBadge label={jobFitLabel} />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-[#64748b]">Resume Quality</span>
+          <ScoreBadge label={qualityLabel} />
+        </div>
+      </div>
+    </header>
+  );
 };
 
 export default DetailedAnalysisHeader;

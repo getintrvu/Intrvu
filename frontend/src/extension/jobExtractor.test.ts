@@ -168,3 +168,20 @@ describe('expandJobDescription only touches the description', () => {
     expect(clicked).toEqual([]);
   });
 });
+
+describe('LinkedIn feedback prompts are not job titles', () => {
+  it('ignores "Are these results helpful?" and other question headings', () => {
+    const doc = page(`
+      <main>
+        <h2>Are these results helpful?</h2>
+        <h2>How do you match?</h2>
+        <div class="jobs-unified-top-card"><h1>Senior Data Scientist</h1></div>
+        ${DESCRIPTION}
+      </main>`);
+    expect(extractJobTitle(doc)).toBe('Senior Data Scientist');
+  });
+
+  it('returns empty rather than a question when it is the only heading', () => {
+    expect(extractJobTitle(page(`<h2>Are these results helpful?</h2>${DESCRIPTION}`))).toBe('');
+  });
+});

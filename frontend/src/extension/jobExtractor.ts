@@ -102,7 +102,8 @@ const TOP_CARD = '[class*="top-card"], [class*="job-details-jobs-unified"], [dat
 const clean = (value: string | null | undefined) => (value ?? '').replace(/\s+/g, ' ').trim();
 
 function plausibleTitle(text: string): boolean {
-  return text.length > 2 && text.length < 150 && !NOISE_HEADING.test(text);
+  // Job titles are never questions ("Are these results helpful?", "How do you match?").
+  return text.length > 2 && text.length < 150 && !text.endsWith('?') && !NOISE_HEADING.test(text);
 }
 
 function insideChrome(el: Element): boolean {
