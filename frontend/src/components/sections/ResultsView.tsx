@@ -99,6 +99,12 @@ const ResultsView: React.FC<ResultsSectionProps> = ({ analysisData, onUploadNewR
       <div className="mb-6 text-center">
         <h1 className="mb-1 text-[22px] font-bold tracking-tight text-[#1e293b]">Resume Analysis Results</h1>
         <p className="text-sm font-medium text-[#64748b]">Here&apos;s how your resume matches this job</p>
+        {analysisData.job_context?.title && (
+          <p className="mt-1 text-xs font-semibold text-[#475569]">
+            {analysisData.job_context.title}
+            {analysisData.job_context.company ? ` at ${analysisData.job_context.company}` : ''}
+          </p>
+        )}
         {analysisData.engine?.own_key && (
           <p className="mt-1 text-[11px] text-[#94a3b8]">
             Analyzed with your own {analysisData.engine.provider === 'openai' ? 'OpenAI' : 'Gemini'} key ({analysisData.engine.model})

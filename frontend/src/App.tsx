@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useAnalysisSession } from './hooks/useAnalysisSession';
+import { useJobData } from './hooks/useJobData';
+import { jobKey } from './lib/jobKey';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
@@ -6,25 +9,15 @@ import LinkedInJobExtractor from './components/LinkedInJobExtractor';
 import SettingsPanel from './components/SettingsPanel';
 import SignInScreen from './auth/SignInScreen';
 import { useAuth } from './auth/AuthProvider';
-import type { AnalysisData } from './types/AnalysisData';
 
-export type SectionType =
-  | 'start'
-  | 'keywords'
-  | 'experience'
-  | 'education'
-  | 'skills'
-  | 'structure'
-  | 'action-verbs'
-  | 'measurable-results'
-  | 'bullet-effectiveness'
-  | 'results';
+export type { SectionType } from './hooks/useAnalysisSession';
 
 function App() {
   const { status } = useAuth();
-  const [currentSection, setCurrentSection] = useState<SectionType>('start');
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [analysisStarted, setAnalysisStarted] = useState(false);
+  const job = useJobData();
+  const { section, setSection, analysisData, analysisStarted, showResult, clearResult } = useAnalysisSession(
+    job?.jobDescription ? jobKey(job.jobDescription) : null,
+  );
   const [showFeedbackMenu, setShowFeedbackMenu] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -42,17 +35,17 @@ function App() {
           <LinkedInJobExtractor />
         </div>
         <MainContent
-          currentSection={currentSection}
-          onSectionChange={setCurrentSection}
+          currentSection={section}
+          onSectionChange={setSection}
           analysisData={analysisData}
-          setAnalysisData={setAnalysisData}
-          setAnalysisStarted={setAnalysisStarted}
+          onResult={showResult}
+          onClearResult={clearResult}
           onOpenSettings={() => setShowSettings(true)}
         />
       </div>
       <Sidebar
-        activeSection={currentSection}
-        onSectionChange={setCurrentSection}
+        activeSection={section}
+        onSectionChange={setSection}
         analysisStarted={analysisStarted}
         showUserDropdown={showUserDropdown}
         setShowUserDropdown={setShowUserDropdown}

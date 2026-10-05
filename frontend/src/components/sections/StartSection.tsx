@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
-import type { SectionType } from '../../App';
 import type { AnalysisData } from '../../types/AnalysisData';
 import { useAuth } from '../../auth/AuthProvider';
 import { ApiError, KEY_ERROR_CODES, analyzeResume, userMessage } from '../../api/client';
@@ -10,12 +9,12 @@ import { useByok } from '../../hooks/useByok';
 import { PROVIDERS, engineId } from '../../lib/byok';
 import { MAX_PDF_BYTES, MAX_PDF_MB, MIN_JOB_DESCRIPTION_CHARS } from '../../lib/config';
 import { analysisKey, getCachedAnalysis, saveAnalysis, type CachedAnalysis } from '../../lib/analysisCache';
+import { jobKey } from '../../lib/jobKey';
 import { clearResume, loadResume, saveResume } from '../../lib/resumeStore';
 
 interface StartSectionProps {
-  setAnalysisStarted: (started: boolean) => void;
-  onSectionChange: (section: SectionType) => void;
-  setAnalysisData: (data: AnalysisData) => void;
+  /** Called with a finished analysis and the key of the job it was run for. */
+  onResult: (data: AnalysisData, jobKey: string) => void;
   onOpenSettings: () => void;
 }
 
@@ -47,7 +46,7 @@ const Notice: React.FC<{ tone: 'warn' | 'error'; children: React.ReactNode; acti
   </div>
 );
 
-const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSectionChange, setAnalysisData, onOpenSettings }) => {
+const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings }) => {
   const { getToken } = useAuth();
   const job = useJobData();
   const { usage, refresh: refreshUsage } = useUsage();
@@ -117,24 +116,17 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
   // Viewing a saved result costs nothing, so it does not depend on the daily quota.
   const canAnalyze = ready && (!outOfQuota || !!cached);
 
-  const showResult = (data: AnalysisData) => {
-    setAnalysisData(data);
-    setAnalysisStarted(true);
-    onSectionChange('results');
-  };
 
   /** `fresh` skips the saved result and runs a new analysis (which replaces it). */
   const handleAnalyze = async (fresh = false) => {
     if (!file || !job) return;
-    if (cached && !fresh) return showResult(cached.data);
+    if (cached && !fresh) return onResult(cached.data, jobKey(job.jobDescription));
     setIsAnalyzing(true);
     setError(null);
     try {
       const result = await analyzeResume(file, job, await getToken(), byok);
       void analysisKey(file, job.jobDescription, engine).then((key) => saveAnalysis(key, result));
-      setAnalysisData(result);
-      setAnalysisStarted(true);
-      onSectionChange('results');
+      onResult(result, jobKey(job.jobDescription)); // the job as it was when Analyze was clicked
     } catch (err) {
       setError({ message: userMessage(err), keyProblem: err instanceof ApiError && KEY_ERROR_CODES.has(err.code) });
     } finally {

@@ -15,19 +15,19 @@ import { clearResume } from '../lib/resumeStore';
 
 interface MainContentProps {
   currentSection: SectionType;
-  setAnalysisStarted: (started: boolean) => void;
   onSectionChange: (section: SectionType) => void;
   analysisData: AnalysisData | null;
-  setAnalysisData: (data: AnalysisData | null) => void;
+  onResult: (data: AnalysisData, jobKey: string) => void;
+  onClearResult: () => void;
   onOpenSettings: () => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
   currentSection,
-  setAnalysisStarted,
   onSectionChange,
   analysisData,
-  setAnalysisData,
+  onResult,
+  onClearResult,
   onOpenSettings
 }) => {
   const renderSection = () => {
@@ -35,9 +35,7 @@ const MainContent: React.FC<MainContentProps> = ({
       case 'start':
         return (
           <StartSection
-            setAnalysisStarted={setAnalysisStarted}
-            onSectionChange={onSectionChange}
-            setAnalysisData={setAnalysisData}
+            onResult={onResult}
             onOpenSettings={onOpenSettings}
           />
         );
@@ -63,10 +61,8 @@ const MainContent: React.FC<MainContentProps> = ({
             analysisData={analysisData}
             onViewDetails={() => onSectionChange('keywords')}
             onUploadNewResume={() => {
-              setAnalysisData(null);
-              setAnalysisStarted(false);
               void clearResume();
-              onSectionChange('start');
+              onClearResult();
             }}
           />
         );
