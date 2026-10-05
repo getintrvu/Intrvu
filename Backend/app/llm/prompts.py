@@ -43,9 +43,19 @@ EXPERIENCE
 - Consider seniority, domain, industry relevance and career progression.
 
 EDUCATION
-- Report the highest degree in the resume. Map it to a level: bachelor (BA, BS, BEng, BCom, BBA,
-  licence, honours bachelor, or any internationally recognized 4-year undergraduate degree),
-  master, doctorate, associate_or_diploma (associate degrees, diplomas, certificates), or none.
+- Report the HIGHEST completed degree and map it to a level. Judge by what the degree is, not by the
+  exact spelling or punctuation (B.E., BE, B.Tech and Bachelor of Technology are all the same).
+  - bachelor: any bachelor-level degree, including 3-year ones. Examples: BA, BS, BSc, B.Sc, BEng,
+    B.E., B.Tech, BCA, BCom, B.Com, BBA, BBM, B.Arch, B.Pharm, B.Ed, MBBS, LLB, LLB (Hons),
+    Honours bachelor, licence/licenciatura/laurea, or any internationally recognized undergraduate degree.
+  - master: MA, MS, MSc, M.Sc, MEng, M.E., M.Tech, MCA, MBA, MCom, LLM, MPhil, M.Arch, or an
+    integrated/dual degree whose final award is a master's.
+  - doctorate: PhD, DPhil, EdD, DBA, MD.
+  - associate_or_diploma: associate degrees, diplomas (including polytechnic and ITI diplomas),
+    certificates, bootcamps, A-levels, and school-leaving certificates (e.g. 12th / Higher Secondary).
+  - none: no degree or qualification at all.
+- If several degrees are listed, return the highest. If a degree is not completed yet (pursuing, in
+  progress, expected graduation), still report it and append " (in progress)" to degree_found.
 - If no degree is present, use degree_found "None", level "none", and an empty field_of_study.
 
 SKILLS

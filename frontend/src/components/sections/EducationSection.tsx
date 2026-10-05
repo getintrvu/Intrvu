@@ -36,8 +36,12 @@ const EducationSection: React.FC<EducationSectionProps> = ({ analysisData }) => 
   const { score, analysis } = education;
   const percentage = Math.round((score.pointsAwarded / score.maxPoints) * 100);
   const hasDegree = analysis.degreeFound && analysis.degreeFound !== 'None';
+  // The degree text usually already names the field ("B.Tech in Computer Science"): add it only when it doesn't.
+  const field = analysis.fieldOfStudy?.trim();
   const degreeLabel = hasDegree
-    ? `${analysis.degreeFound}${analysis.fieldOfStudy ? ` in ${analysis.fieldOfStudy}` : ''}`
+    ? field && !analysis.degreeFound.toLowerCase().includes(field.toLowerCase())
+      ? `${analysis.degreeFound} in ${field}`
+      : analysis.degreeFound
     : null;
 
   return (
