@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { deleteMyData, userMessage } from '../api/client';
 import { useUsage } from '../hooks/useUsage';
 import { useByok } from '../hooks/useByok';
+import Avatar from './Avatar';
 import { PROVIDERS } from '../lib/byok';
 import { STORAGE_KEYS } from '../extension/constants';
 import { removeItems } from '../lib/storage';
@@ -22,7 +23,7 @@ const itemClass =
  * made it run off the side of the panel.
  */
 const UserDropdown: React.FC<UserDropdownProps> = ({ onClose, onOpenSettings }) => {
-  const { email, signOut, getToken } = useAuth();
+  const { email, name, avatarUrl, signOut, getToken } = useAuth();
   const { usage } = useUsage();
   const { byok } = useByok();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -69,12 +70,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose, onOpenSettings }) 
       >
         <div className="px-3 pb-3 pt-2">
           <div className="flex items-center gap-2.5">
-            <span
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-sm font-bold uppercase text-[#4f46e5]"
-              aria-hidden="true"
-            >
-              {(email ?? '?').charAt(0)}
-            </span>
+            <Avatar url={avatarUrl} name={name ?? email} className="h-8 w-8" />
             <span className="min-w-0 text-[13px] font-semibold leading-tight text-gray-800" title={email ?? undefined}>
               {/* a break opportunity before the @ so a long address wraps there, not mid-word */}
               {emailName}

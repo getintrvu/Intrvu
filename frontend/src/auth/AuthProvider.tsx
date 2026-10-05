@@ -9,6 +9,9 @@ type Status = 'loading' | 'signedOut' | 'signedIn';
 interface AuthContextValue {
   status: Status;
   email: string | null;
+  /** Display name and profile picture from the sign-in provider (Google), when it shares them. */
+  name: string | null;
+  avatarUrl: string | null;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   /** A fresh access token (refreshed automatically when it is about to expire). */
@@ -16,6 +19,12 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+/** A text field from the provider's profile (Supabase keeps it in user_metadata). */
+function profileText(session: Session | null, key: string): string | null {
+  const value = session?.user.user_metadata?.[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -52,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       email: session?.user.email ?? null,
+      name: profileText(session, 'full_name') ?? profileText(session, 'name'),
+      avatarUrl: profileText(session, 'avatar_url') ?? profileText(session, 'picture'),
       signIn: signInWithGoogle,
       signOut: async () => {
         await clearAnalysisCache(); // saved results contain resume details: never leave them for the next user

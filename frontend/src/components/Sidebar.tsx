@@ -1,5 +1,7 @@
 import React from 'react';
-import { HelpCircle, User } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
+import Avatar from './Avatar';
+import { useAuth } from '../auth/AuthProvider';
 import { TERMS_URL } from '../lib/config';
 import { SectionType } from '../App';
 import UserDropdown from './UserDropdown';
@@ -40,6 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   setShowFeedbackMenu,
   onOpenSettings
 }) => {
+  const { avatarUrl, name, email } = useAuth();
   return (
     <aside className="w-32 bg-gray-100 flex-shrink-0 relative">
       <div className="pt-4 pb-4 flex flex-col items-center h-full">
@@ -47,10 +50,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="mb-6 flex flex-col gap-3">
           <button
             onClick={() => setShowUserDropdown(!showUserDropdown)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 transition-all duration-200 hover:bg-gray-300"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 ring-2 ring-transparent transition-all duration-200 hover:ring-[#c7d2fe] focus:outline-none focus-visible:ring-[#818cf8]"
             aria-label="Open user menu"
+            aria-expanded={showUserDropdown}
           >
-            <User className="h-5 w-5 text-gray-600" />
+            <Avatar url={avatarUrl} name={name ?? email} />
           </button>
         </div>
 
