@@ -334,5 +334,8 @@ def total_points(*components: Component) -> float:
 
 
 def overall(total: float, labels: list[tuple[int, str, str]]) -> dict[str, Any]:
-    label, symbol = label_for(total, labels)
-    return {"total_points": total, "percentage": round(total), "label": label, "symbol": symbol}
+    # Round half up (Python's round() goes to the even number), and pick the label from the number
+    # the user sees: a total of 89.5 must show "90%" AND the label that goes with 90.
+    percentage = int(total + 0.5)
+    label, symbol = label_for(percentage, labels)
+    return {"total_points": total, "percentage": percentage, "label": label, "symbol": symbol}

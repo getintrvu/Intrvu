@@ -110,7 +110,7 @@ def test_labels():
     assert scoring.overall(95, scoring.JOB_FIT_LABELS)["label"] == "Great Match"
     assert scoring.overall(75, scoring.JOB_FIT_LABELS)["label"] == "Good Match"
     assert scoring.overall(60, scoring.JOB_FIT_LABELS)["label"] == "Moderate Match"
-    assert scoring.overall(59.9, scoring.JOB_FIT_LABELS)["label"] == "Low Fit"
+    assert scoring.overall(59.4, scoring.JOB_FIT_LABELS)["label"] == "Low Fit"
     assert scoring.overall(90, scoring.QUALITY_LABELS)["label"] == "Ready to Impress"
     assert scoring.overall(70, scoring.QUALITY_LABELS)["label"] == "Needs Polish"
     assert scoring.overall(10, scoring.QUALITY_LABELS)["label"] == "Refine for Impact"
@@ -121,3 +121,15 @@ def test_scores_never_exceed_maximums():
     ex.strong_keywords = ex.strong_keywords * 50
     parts = [scoring.score_keywords(ex), scoring.score_experience(ex), scoring.score_education(ex), scoring.score_skills(ex)]
     assert scoring.total_points(*parts) <= 100
+
+
+def test_label_always_matches_the_percentage_the_user_sees():
+    """89.5 displays as 90%, so it must carry the label for 90 (spec section 4), not the one for 89."""
+    for total, shown, label in [
+        (89.4, 89, "Good Match"), (89.5, 90, "Great Match"), (74.5, 75, "Good Match"),
+        (74.4, 74, "Moderate Match"), (59.5, 60, "Moderate Match"), (59.4, 59, "Low Fit"),
+    ]:
+        result = scoring.overall(total, scoring.JOB_FIT_LABELS)
+        assert (result["percentage"], result["label"]) == (shown, label), total
+    assert scoring.overall(69.5, scoring.QUALITY_LABELS)["label"] == "Needs Polish"  # shows 70%
+    assert scoring.overall(89.5, scoring.QUALITY_LABELS)["label"] == "Ready to Impress"  # shows 90%
