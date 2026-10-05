@@ -13,6 +13,7 @@ interface SidebarProps {
   setShowUserDropdown: (show: boolean) => void;
   showFeedbackMenu: boolean;
   setShowFeedbackMenu: (show: boolean) => void;
+  onOpenSettings: () => void;
 }
 
 const sidebarItems = [
@@ -36,7 +37,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   showUserDropdown,
   setShowUserDropdown,
   showFeedbackMenu,
-  setShowFeedbackMenu
+  setShowFeedbackMenu,
+  onOpenSettings
 }) => {
   return (
     <aside className="w-32 bg-gray-100 flex-shrink-0 relative">
@@ -102,7 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {showUserDropdown && (
-        <UserDropdown onClose={() => setShowUserDropdown(false)} />
+        <UserDropdown onClose={() => setShowUserDropdown(false)} onOpenSettings={onOpenSettings} />
       )}
 
       {showFeedbackMenu && (

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { clearAnalysisCache } from '../lib/analysisCache';
+import { clearByok } from '../lib/byok';
 import { signInWithGoogle, supabase } from '../lib/supabase';
 
 type Status = 'loading' | 'signedOut' | 'signedIn';
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn: signInWithGoogle,
       signOut: async () => {
         await clearAnalysisCache(); // saved results contain resume details: never leave them for the next user
+        await clearByok(); // and a personal API key must not carry over to whoever signs in next
         await supabase.auth.signOut();
       },
       getToken,

@@ -19,6 +19,7 @@ interface MainContentProps {
   onSectionChange: (section: SectionType) => void;
   analysisData: AnalysisData | null;
   setAnalysisData: (data: AnalysisData | null) => void;
+  onOpenSettings: () => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
@@ -26,7 +27,8 @@ const MainContent: React.FC<MainContentProps> = ({
   setAnalysisStarted,
   onSectionChange,
   analysisData,
-  setAnalysisData
+  setAnalysisData,
+  onOpenSettings
 }) => {
   const renderSection = () => {
     switch (currentSection) {
@@ -36,6 +38,7 @@ const MainContent: React.FC<MainContentProps> = ({
             setAnalysisStarted={setAnalysisStarted}
             onSectionChange={onSectionChange}
             setAnalysisData={setAnalysisData}
+            onOpenSettings={onOpenSettings}
           />
         );
       case 'keywords':

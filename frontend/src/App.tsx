@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import LinkedInJobExtractor from './components/LinkedInJobExtractor';
+import SettingsPanel from './components/SettingsPanel';
 import SignInScreen from './auth/SignInScreen';
 import { useAuth } from './auth/AuthProvider';
 import type { AnalysisData } from './types/AnalysisData';
@@ -26,6 +27,7 @@ function App() {
   const [analysisStarted, setAnalysisStarted] = useState(false);
   const [showFeedbackMenu, setShowFeedbackMenu] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   if (status === 'loading') {
     return <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading…</div>;
@@ -33,7 +35,7 @@ function App() {
   if (status === 'signedOut') return <SignInScreen />;
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-white">
+    <div className="relative flex h-full w-full overflow-hidden bg-white">
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
         <div className="px-4 pb-1 pt-3">
@@ -45,6 +47,7 @@ function App() {
           analysisData={analysisData}
           setAnalysisData={setAnalysisData}
           setAnalysisStarted={setAnalysisStarted}
+          onOpenSettings={() => setShowSettings(true)}
         />
       </div>
       <Sidebar
@@ -55,7 +58,12 @@ function App() {
         setShowUserDropdown={setShowUserDropdown}
         showFeedbackMenu={showFeedbackMenu}
         setShowFeedbackMenu={setShowFeedbackMenu}
+        onOpenSettings={() => {
+          setShowUserDropdown(false);
+          setShowSettings(true);
+        }}
       />
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

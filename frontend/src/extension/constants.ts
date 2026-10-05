@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   panelWidth: 'intrvu_panel_width',
   resume: 'intrvufit_resume',
   analysisCache: 'intrvufit_analysis_cache',
+  byok: 'intrvufit_byok',
 } as const;
 
 /** chrome.runtime / chrome.tabs messages. */

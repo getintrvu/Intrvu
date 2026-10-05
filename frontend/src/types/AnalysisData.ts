@@ -72,5 +72,6 @@ export interface AnalysisData {
     measurable_results: MeasurableResults;
     bullet_point_effectiveness: BulletEffectiveness;
   };
+  engine: { provider: string; model: string; own_key: boolean };
   process_time_seconds: number;
 }

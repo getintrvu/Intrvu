@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { LogOut, Trash2 } from 'lucide-react';
+import { KeyRound, LogOut, Trash2 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { deleteMyData, userMessage } from '../api/client';
 import { useUsage } from '../hooks/useUsage';
+import { useByok } from '../hooks/useByok';
+import { PROVIDERS } from '../lib/byok';
 import { STORAGE_KEYS } from '../extension/constants';
 import { removeItems } from '../lib/storage';
 
 interface UserDropdownProps {
   onClose: () => void;
+  onOpenSettings: () => void;
 }
 
 const itemClass =
@@ -18,9 +21,10 @@ const itemClass =
  * anchored to the right edge and opens leftwards over the content. Anchoring it to the left edge
  * made it run off the side of the panel.
  */
-const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
+const UserDropdown: React.FC<UserDropdownProps> = ({ onClose, onOpenSettings }) => {
   const { email, signOut, getToken } = useAuth();
   const { usage } = useUsage();
+  const { byok } = useByok();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +40,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
     setError(null);
     try {
       await deleteMyData(await getToken());
-      await removeItems(STORAGE_KEYS.resume, STORAGE_KEYS.analysisCache, STORAGE_KEYS.jobData, STORAGE_KEYS.jobExtractedAt);
+      await removeItems(
+        STORAGE_KEYS.resume,
+        STORAGE_KEYS.analysisCache,
+        STORAGE_KEYS.byok,
+        STORAGE_KEYS.jobData,
+        STORAGE_KEYS.jobExtractedAt,
+      );
       await signOut();
     } catch (err) {
       setError(userMessage(err));
@@ -73,7 +83,11 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
             </span>
           </div>
 
-          {usage && (
+          {byok && (
+            <p className="mt-3 text-[11px] text-gray-500">Using your own {PROVIDERS[byok.provider].label} key. No daily limit.</p>
+          )}
+
+          {!byok && usage && (
             <div className="mt-3">
               <div className="mb-1 flex justify-between text-[11px] text-gray-500">
                 <span>Today</span>
@@ -89,6 +103,15 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onClose }) => {
         </div>
 
         <div className="border-t border-gray-100 pt-1.5">
+          <button
+            role="menuitem"
+            onClick={onOpenSettings}
+            className={`${itemClass} text-gray-700 hover:bg-gray-50`}
+          >
+            <KeyRound className="h-4 w-4 text-gray-400" />
+            AI settings
+          </button>
+
           <button role="menuitem" onClick={() => void signOut()} className={`${itemClass} text-gray-700 hover:bg-gray-50`}>
             <LogOut className="h-4 w-4 text-gray-400" />
             Sign out

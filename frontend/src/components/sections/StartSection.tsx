@@ -3,9 +3,11 @@ import { Check, Loader2 } from 'lucide-react';
 import type { SectionType } from '../../App';
 import type { AnalysisData } from '../../types/AnalysisData';
 import { useAuth } from '../../auth/AuthProvider';
-import { analyzeResume, userMessage } from '../../api/client';
+import { ApiError, KEY_ERROR_CODES, analyzeResume, userMessage } from '../../api/client';
 import { useJobData } from '../../hooks/useJobData';
 import { useUsage } from '../../hooks/useUsage';
+import { useByok } from '../../hooks/useByok';
+import { PROVIDERS, engineId } from '../../lib/byok';
 import { MAX_PDF_BYTES, MAX_PDF_MB, MIN_JOB_DESCRIPTION_CHARS } from '../../lib/config';
 import { analysisKey, getCachedAnalysis, saveAnalysis, type CachedAnalysis } from '../../lib/analysisCache';
 import { clearResume, loadResume, saveResume } from '../../lib/resumeStore';
@@ -14,11 +16,16 @@ interface StartSectionProps {
   setAnalysisStarted: (started: boolean) => void;
   onSectionChange: (section: SectionType) => void;
   setAnalysisData: (data: AnalysisData) => void;
+  onOpenSettings: () => void;
 }
 
 const isPdf = (file: File) => file.type === 'application/pdf' && file.name.toLowerCase().endsWith('.pdf');
 
-const Notice: React.FC<{ tone: 'warn' | 'error'; children: React.ReactNode }> = ({ tone, children }) => (
+const Notice: React.FC<{ tone: 'warn' | 'error'; children: React.ReactNode; action?: { label: string; onClick: () => void } }> = ({
+  tone,
+  children,
+  action,
+}) => (
   <div
     role={tone === 'error' ? 'alert' : 'status'}
     className={`mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm ${
@@ -26,19 +33,31 @@ const Notice: React.FC<{ tone: 'warn' | 'error'; children: React.ReactNode }> = 
     }`}
   >
     <span>{tone === 'error' ? '❌' : '⚠️'}</span>
-    <span>{children}</span>
+    <span>
+      {children}
+      {action && (
+        <>
+          {' '}
+          <button onClick={action.onClick} className="font-medium underline">
+            {action.label}
+          </button>
+        </>
+      )}
+    </span>
   </div>
 );
 
-const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSectionChange, setAnalysisData }) => {
+const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSectionChange, setAnalysisData, onOpenSettings }) => {
   const { getToken } = useAuth();
   const job = useJobData();
   const { usage, refresh: refreshUsage } = useUsage();
+  const { byok } = useByok();
+  const engine = engineId(byok);
 
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; keyProblem: boolean } | null>(null);
   const [cached, setCached] = useState<CachedAnalysis | null>(null);
 
   // Restore the resume from the last session.
@@ -56,8 +75,10 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
 
   const acceptFile = async (candidate?: File) => {
     if (!candidate) return;
-    if (!isPdf(candidate)) return setError('Only PDF files are supported. Please choose a .pdf file.');
-    if (candidate.size > MAX_PDF_BYTES) return setError(`That file is too large. The maximum size is ${MAX_PDF_MB} MB.`);
+    if (!isPdf(candidate)) return setError({ message: 'Only PDF files are supported. Please choose a .pdf file.', keyProblem: false });
+    if (candidate.size > MAX_PDF_BYTES) {
+      return setError({ message: `That file is too large. The maximum size is ${MAX_PDF_MB} MB.`, keyProblem: false });
+    }
     setError(null);
     setFile(candidate);
     try {
@@ -78,7 +99,7 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
     let active = true;
     setCached(null);
     if (file && jobDescription) {
-      analysisKey(file, jobDescription)
+      analysisKey(file, jobDescription, engine)
         .then(getCachedAnalysis)
         .then((entry) => active && setCached(entry))
         .catch(() => undefined);
@@ -86,11 +107,12 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
     return () => {
       active = false;
     };
-  }, [file, jobDescription]);
+  }, [file, jobDescription, engine]);
 
   const descriptionLength = job?.jobDescription?.length ?? 0;
   const hasEnoughDescription = descriptionLength >= MIN_JOB_DESCRIPTION_CHARS;
-  const outOfQuota = usage !== null && usage.remaining === 0;
+  // People on their own key are not limited by our daily quota.
+  const outOfQuota = !byok && usage !== null && usage.remaining === 0;
   const ready = !!file && !!job && hasEnoughDescription && !isAnalyzing;
   // Viewing a saved result costs nothing, so it does not depend on the daily quota.
   const canAnalyze = ready && (!outOfQuota || !!cached);
@@ -108,13 +130,13 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
     setIsAnalyzing(true);
     setError(null);
     try {
-      const result = await analyzeResume(file, job, await getToken());
-      void analysisKey(file, job.jobDescription).then((key) => saveAnalysis(key, result));
+      const result = await analyzeResume(file, job, await getToken(), byok);
+      void analysisKey(file, job.jobDescription, engine).then((key) => saveAnalysis(key, result));
       setAnalysisData(result);
       setAnalysisStarted(true);
       onSectionChange('results');
     } catch (err) {
-      setError(userMessage(err));
+      setError({ message: userMessage(err), keyProblem: err instanceof ApiError && KEY_ERROR_CODES.has(err.code) });
     } finally {
       setIsAnalyzing(false);
       void refreshUsage();
@@ -218,10 +240,22 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
         </p>
       )}
 
-      {usage && (
+      {byok ? (
         <p className="mb-6 text-center text-xs text-gray-500">
-          {usage.remaining} of {usage.limit} analyses left today
+          Using your own {PROVIDERS[byok.provider].label} key · no daily limit ·{' '}
+          <button onClick={onOpenSettings} className="underline hover:text-blue-700">
+            AI settings
+          </button>
         </p>
+      ) : (
+        usage && (
+          <p className="mb-6 text-center text-xs text-gray-500">
+            {usage.remaining} of {usage.limit} analyses left today ·{' '}
+            <button onClick={onOpenSettings} className="underline hover:text-blue-700">
+              use your own key
+            </button>
+          </p>
+        )
       )}
 
       {!job && <Notice tone="warn">No job description found yet. Open a LinkedIn job posting first.</Notice>}
@@ -232,7 +266,11 @@ const StartSection: React.FC<StartSectionProps> = ({ setAnalysisStarted, onSecti
         </Notice>
       )}
       {outOfQuota && <Notice tone="warn">You have used all your analyses for today. Come back tomorrow.</Notice>}
-      {error && <Notice tone="error">{error}</Notice>}
+      {error && (
+        <Notice tone="error" action={error.keyProblem ? { label: 'Open AI settings', onClick: onOpenSettings } : undefined}>
+          {error.message}
+        </Notice>
+      )}
     </div>
   );
 };

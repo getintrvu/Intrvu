@@ -10,6 +10,15 @@ FastAPI service for the IntrvuFit Chrome extension. Deployed on Vercel (Python r
 4. `app/scoring.py` computes every score from that evidence using the V4 rules in `docs/scoring-spec-v4.md`, so identical evidence always gives an identical score.
 5. If either call fails the request returns an error and the quota unit is refunded. A fake zero score is never returned.
 
+## Bring your own key
+
+A user can use their own Gemini or OpenAI key instead of the server's. The extension keeps the key in the browser and sends it with each request in the `X-LLM-Provider`, `X-LLM-Key` and optional `X-LLM-Model` headers. It is used for that request only: it is never stored, and is scrubbed from logs (`app/llm/redact.py`). Users on their own key skip the daily quota, because it exists to cap our own AI spend.
+
+- `POST /api/v1/key/check` verifies a key with one tiny request.
+- Error codes: `llm_key_rejected` (the provider refused the key), `llm_key_quota` (no credit or rate limited), `llm_model_not_found`, `invalid_llm_key`, `invalid_llm_provider`, `invalid_llm_model`.
+- `OPENAI_MODEL` is the default model for OpenAI keys (override per user in the settings).
+- Live checks against the real APIs: `python -m pytest -m live tests/live/test_byok_live.py`.
+
 ## API
 
 | Method | Path | Auth | Notes |
@@ -17,6 +26,7 @@ FastAPI service for the IntrvuFit Chrome extension. Deployed on Vercel (Python r
 | GET | `/api/health` | no | |
 | GET | `/api/v1/usage` | yes | `{used, limit, remaining}` for today |
 | DELETE | `/api/v1/me/data` | yes | deletes IntrvuFit's data for the caller (usage rows). The shared Supabase account is kept |
+| POST | `/api/v1/key/check` | yes | verifies the key in the `X-LLM-*` headers |
 | POST | `/api/v1/analyze` | yes | multipart: `resume` (PDF, max 4 MB) and `jobData` (JSON string: `jobTitle`, `company`, `description` >= 100 chars) |
 
 Errors always look like `{"error": {"code": "...", "message": "..."}}`. Codes: `unauthorized`, `invalid_pdf`, `encrypted_pdf`, `no_text_in_pdf`, `file_too_large`, `invalid_job_data`, `quota_exceeded`, `llm_busy`, `analysis_failed`, `service_unavailable`, `internal_error`.

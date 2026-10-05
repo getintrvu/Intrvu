@@ -95,6 +95,11 @@ const ResultsView: React.FC<ResultsSectionProps> = ({ analysisData, onUploadNewR
       <div className="mb-6 text-center">
         <h1 className="mb-1 text-[22px] font-bold tracking-tight text-[#1e293b]">Resume Analysis Results</h1>
         <p className="text-sm font-medium text-[#64748b]">Here&apos;s how your resume matches this job</p>
+        {analysisData.engine?.own_key && (
+          <p className="mt-1 text-[11px] text-[#94a3b8]">
+            Analyzed with your own {analysisData.engine.provider === 'openai' ? 'OpenAI' : 'Gemini'} key ({analysisData.engine.model})
+          </p>
+        )}
       </div>
 
       <div className="flex-grow space-y-4">

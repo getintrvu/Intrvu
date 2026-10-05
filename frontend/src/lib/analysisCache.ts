@@ -27,10 +27,11 @@ async function sha256(input: ArrayBuffer | string): Promise<string> {
 /** Case and whitespace differences in the job text must not create a different key. */
 const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, ' ').trim();
 
-/** Key for one resume file against one job description. */
-export async function analysisKey(file: File, jobDescription: string): Promise<string> {
+/** Key for one resume file against one job description, analyzed by one engine (the built-in AI or a
+ * user's own provider and model), so switching engines never shows another engine's result. */
+export async function analysisKey(file: File, jobDescription: string, engine = 'server'): Promise<string> {
   const [fileHash, jobHash] = await Promise.all([sha256(await file.arrayBuffer()), sha256(normalize(jobDescription))]);
-  return `${SCORING_VERSION}:${fileHash.slice(0, 32)}:${jobHash.slice(0, 32)}`;
+  return `${SCORING_VERSION}:${engine}:${fileHash.slice(0, 32)}:${jobHash.slice(0, 32)}`;
 }
 
 async function readAll(): Promise<CachedAnalysis[]> {

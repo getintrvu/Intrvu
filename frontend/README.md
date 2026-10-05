@@ -53,6 +53,10 @@ It writes `key.pem` (keep it private and backed up), and prints the `EXTENSION_P
 2. Supabase -> Authentication -> Providers -> Google: paste the client id and secret.
 3. Supabase -> Authentication -> URL configuration -> Redirect URLs: add `https://<extension-id>.chromiumapp.org/`.
 
+## Bring your own key
+
+**User menu -> AI settings** lets people use their own Gemini or OpenAI key (`src/components/SettingsPanel.tsx`, `src/lib/byok.ts`). The key is verified with the backend before it is saved, kept only in `chrome.storage.local`, sent in `X-LLM-*` headers with each analysis, and removed on sign-out. People on their own key are not limited by the daily quota, and saved results are kept separately per provider and model.
+
 ## Privacy
 
 The resume PDF and the last 20 finished analyses are kept in `chrome.storage.local` on the user's device (so the same resume and job always show the same result without using quota); both are cleared on sign-out. The PDF and is sent to the backend only when **Analyze** is clicked. "Delete my IntrvuFit data" in the user menu deletes IntrvuFit's server-side data for the user and clears local data. The Supabase account itself is shared with other products and is not deleted.

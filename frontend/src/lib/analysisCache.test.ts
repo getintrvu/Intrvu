@@ -24,6 +24,19 @@ describe('analysisKey', () => {
   });
 });
 
+describe('analysisKey and the engine', () => {
+  it('differs between the built-in AI and a user\'s own provider or model', async () => {
+    const server = await analysisKey(pdf('r'), 'job');
+    const gemini = await analysisKey(pdf('r'), 'job', 'gemini:default');
+    const openai = await analysisKey(pdf('r'), 'job', 'openai:gpt-4o');
+    expect(new Set([server, gemini, openai]).size).toBe(3);
+  });
+
+  it('defaults to the built-in AI', async () => {
+    expect(await analysisKey(pdf('r'), 'job')).toBe(await analysisKey(pdf('r'), 'job', 'server'));
+  });
+});
+
 describe('saved results', () => {
   it('returns what was saved and null for unknown keys', async () => {
     await saveAnalysis('k1', result('Good Match'));
