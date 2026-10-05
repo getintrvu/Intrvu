@@ -55,12 +55,40 @@ The last retry uses the fallback model, and so does a 404 on the primary, so one
 
 ## Deploy (Vercel)
 
-1. Use the Supabase project shared with the other products (or a new one), enable the Google provider, and run `supabase/migrations/0001_init.sql` in the SQL editor.
-2. Import the repo in Vercel with **Root Directory = `Backend`**.
-3. Set the environment variables from `.env.example` (`GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CHROME_EXTENSION_IDS`, `ENVIRONMENT=production`).
-4. `vercel.json` sets `maxDuration` to 60 s. Check your plan's limit.
+Vercel finds the FastAPI app by itself: `app/main.py` exports `app`, `requirements.txt` lists the runtime
+dependencies, and `.python-version` pins Python 3.12. `vercel.json` only sets `maxDuration` (60 s; the
+Hobby maximum is 300 s) and keeps tests and migrations out of the bundle. Request bodies are limited to
+4.5 MB by Vercel, which is why uploads are capped at 4 MB.
 
-`ENVIRONMENT=production` refuses to start with `AUTH_REQUIRED=false` and hides `/docs`.
+1. **Supabase:** the project is already set up (migration `supabase/migrations/0001_init.sql`, Google provider on).
+2. **Import the repo** in Vercel, with **Root Directory = `Backend`**. The framework is detected as FastAPI;
+   leave the build and install commands empty.
+3. **Environment variables** (Project Settings -> Environment Variables, for Production):
+
+   | Variable | Value |
+   |---|---|
+   | `ENVIRONMENT` | `production` |
+   | `GEMINI_API_KEY` | your key. Use a paid-tier project for real users: Google may use free-tier content to improve its products |
+   | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | secret, backend only |
+   | `CHROME_EXTENSION_IDS` | the pinned extension id, so CORS allows the extension |
+   | `LLM_MODEL`, `LLM_FALLBACK_MODEL`, `OPENAI_MODEL`, `DAILY_QUOTA` | optional (defaults in `.env.example`) |
+
+   Do not set `AUTH_REQUIRED=false`: production refuses to start with it. `SUPABASE_JWT_SECRET` is not needed.
+4. **Deploy**, then copy the **production** URL (not a preview URL: previews can sit behind Vercel's deployment
+   protection and answer the extension with a login page).
+5. **Check it:**
+   ```bash
+   python scripts/smoke_test.py https://<your-project>.vercel.app chrome-extension://<extension-id>
+   ```
+6. **Point the extension at it:** set `VITE_API_BASE_URL=https://<your-project>.vercel.app` (no trailing slash) in
+   `frontend/.env`, run `npm run build`, and reload the extension. The API origin is added to the manifest
+   automatically.
+
+Optional: Vercel runs the function in `iad1` (Washington) by default. The Supabase project is in `us-west-2`,
+so `"regions": ["pdx1"]` in `vercel.json` puts them side by side; the effect is small next to the AI calls.
+
+`ENVIRONMENT=production` hides `/docs`.
 
 ## Layout
 
@@ -73,5 +101,5 @@ app/pdf.py       PDF validation and text extraction
 app/analysis.py  runs the two extractions and assembles the response
 app/llm/         Gemini client, prompts, extraction schemas
 app/scoring.py   deterministic scoring
-api/index.py     Vercel entrypoint
+scripts/smoke_test.py   post-deploy checks (no keys needed)
 ```

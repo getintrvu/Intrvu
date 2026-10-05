@@ -25,7 +25,7 @@ Chrome extension (React, MV3)  --Bearer token-->  FastAPI on Vercel  -->  Gemini
 
 1. Create a Supabase project, enable the Google provider, and run `Backend/supabase/migrations/0001_init.sql`.
 2. Generate a stable extension id (`node frontend/scripts/generate-extension-key.mjs`) and add its redirect URL to Supabase.
-3. Deploy `Backend/` to Vercel (Root Directory `Backend`) with the environment variables from `Backend/.env.example`.
+3. Deploy `Backend/` to Vercel (Root Directory `Backend`), set the environment variables listed in `Backend/README.md`, and run `Backend/scripts/smoke_test.py` against the deployment.
 4. Fill `frontend/.env`, run `npm run build`, and load `frontend/dist` as an unpacked extension.
 
 CI (`.github/workflows/ci.yml`) runs the backend tests and the frontend lint, tests and build on every push and pull request.

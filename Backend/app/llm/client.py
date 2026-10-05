@@ -51,6 +51,14 @@ class BaseLLM:
         self._fallback = fallback_model
         self.byok = byok
         self._client = None
+        self._client_loop: asyncio.AbstractEventLoop | None = None
+
+    def _client_is_stale(self) -> bool:
+        """SDK clients are tied to the event loop they were first used on; a serverless runtime may run a
+        later request on another loop, so a client from a different loop must be rebuilt."""
+        if self._client is None:
+            return True
+        return self._client_loop is not None and self._client_loop is not asyncio.get_running_loop()
 
     @property
     def _label(self) -> str:
@@ -132,7 +140,7 @@ class GeminiLLM(BaseLLM):
 
     def _get_client(self):
         # Imported lazily: keeps serverless cold starts light and lets the app boot without a key.
-        if self._client is None:
+        if self._client_is_stale():
             from google import genai
             from google.genai import types
 
@@ -142,6 +150,7 @@ class GeminiLLM(BaseLLM):
                 api_key=self._api_key,
                 http_options=types.HttpOptions(timeout=int(self._settings.llm_timeout_seconds * 1000)),
             )
+            self._client_loop = asyncio.get_running_loop()
         return self._client
 
     @staticmethod
@@ -199,10 +208,11 @@ class OpenAILLM(BaseLLM):
         )
 
     def _get_client(self):
-        if self._client is None:
+        if self._client_is_stale():
             from openai import AsyncOpenAI
 
             self._client = AsyncOpenAI(api_key=self._api_key, timeout=self._settings.llm_timeout_seconds, max_retries=0)
+            self._client_loop = asyncio.get_running_loop()
         return self._client
 
     @staticmethod

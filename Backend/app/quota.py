@@ -1,4 +1,5 @@
 """Per-user daily quota, enforced atomically in Postgres via Supabase RPC functions."""
+import asyncio
 import logging
 from dataclasses import dataclass
 from functools import lru_cache
@@ -36,10 +37,15 @@ class QuotaService:
             "Content-Type": "application/json",
         }
         self._client: httpx.AsyncClient | None = None
+        self._client_loop: asyncio.AbstractEventLoop | None = None
 
     def _http(self) -> httpx.AsyncClient:
-        if self._client is None:
+        # An httpx client is tied to the event loop it was first used on. A serverless runtime may
+        # run a later request on a different loop, so a client from another loop is replaced.
+        loop = asyncio.get_running_loop()
+        if self._client is None or (self._client_loop is not None and self._client_loop is not loop):
             self._client = httpx.AsyncClient(timeout=httpx.Timeout(5.0), headers=self._headers)
+            self._client_loop = loop
         return self._client
 
     async def rpc(self, name: str, payload: dict) -> dict:
