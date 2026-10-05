@@ -1,7 +1,7 @@
 import React from 'react';
-import { TrendingUp, CheckCircle2, Info, User, ChevronRight } from 'lucide-react';
-import { AnalysisData } from '../../types/AnalysisData';
-import { getScoreSymbol, getScoreTone, getToneClasses } from '../../utils/scoreDisplay';
+import { Info, TrendingUp, User, ChevronRight } from 'lucide-react';
+import type { AnalysisData } from '../../types/AnalysisData';
+import ScoreBadge from '../ScoreBadge';
 
 interface ResultsSectionProps {
   analysisData: AnalysisData | null;
@@ -9,163 +9,147 @@ interface ResultsSectionProps {
   onViewDetails?: () => void;
 }
 
-const ResultsView: React.FC<ResultsSectionProps> = ({
-  analysisData,
-  onUploadNewResume,
-  onViewDetails
-}) => {
+interface ScoreCardProps {
+  title: string;
+  label: string;
+  percentage: number;
+  icon: React.ReactNode;
+  iconBg: string;
+  barClass: string;
+  tipLabel: string;
+  tip: string;
+  /** Resume Quality is shown as a tier only: the spec says its number must not be exposed. */
+  showScore?: boolean;
+}
+
+/** One headline result: title and badge, the percentage as a clear number, a bar, and a tip. */
+const ScoreCard: React.FC<ScoreCardProps> = ({ title, label, percentage, icon, iconBg, barClass, tipLabel, tip, showScore = true }) => {
+  const pct = Math.max(0, Math.min(100, Math.round(Number(percentage) || 0)));
+  return (
+    <div className="rounded-[24px] border border-[#f1f5f9] bg-white p-5 shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
+          <h2 className="text-base font-bold text-[#1e293b]">{title}</h2>
+        </div>
+        <ScoreBadge label={label} />
+      </div>
+
+      {showScore && (
+      <div className="mt-5">
+        <div className="mb-2 flex items-baseline justify-between">
+          <span className="text-[28px] font-bold leading-none tabular-nums text-[#1e293b]">
+            {pct}
+            <span className="ml-0.5 text-base font-semibold text-[#94a3b8]">%</span>
+          </span>
+          <span className="text-[11px] font-medium text-[#94a3b8]">out of 100</span>
+        </div>
+        <div
+          className="h-2.5 w-full overflow-hidden rounded-full bg-[#f1f5f9]"
+          role="progressbar"
+          aria-label={title}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct}
+        >
+          <div className={`h-full rounded-full transition-all duration-1000 ease-out ${barClass}`} style={{ width: `${pct}%` }} />
+        </div>
+        <div className="mt-1.5 flex justify-between text-[10px] font-medium text-[#94a3b8]" aria-hidden="true">
+          <span>0</span>
+          <span>50</span>
+          <span>100</span>
+        </div>
+      </div>
+      )}
+
+      <div className={`${showScore ? 'mt-4' : 'mt-5'} flex items-start gap-3 rounded-[18px] border border-[#dbeafe] bg-[#eff6ff] p-4`}>
+        <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#3b82f6]" />
+        <p className="text-xs leading-relaxed text-[#1e40af]">
+          <span className="font-bold">{tipLabel}: </span>
+          {tip}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const ResultsView: React.FC<ResultsSectionProps> = ({ analysisData, onUploadNewResume, onViewDetails }) => {
   if (!analysisData) {
     return (
-      <div className="max-w-2xl mx-auto py-12">
+      <div className="mx-auto max-w-2xl py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-500 font-medium tracking-tight">AI is analyzing your profile...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+          <p className="font-medium tracking-tight text-gray-500">AI is analyzing your profile...</p>
         </div>
       </div>
     );
   }
 
-  const jobFitScore = analysisData.job_fit_score || { percentage: 0, label: 'Unknown', score: 0 };
-  const resumeQualityScore = analysisData.resume_quality_score || { percentage: 0, label: 'Unknown', score: 0 };
-  const safeJobFitPct = Math.max(0, Math.min(100, Number(jobFitScore.percentage || 0)));
-  const safeQualityPct = Math.max(0, Math.min(100, Number(resumeQualityScore.percentage || 0)));
-  const safeJobFitLabel = jobFitScore.label || 'Unknown';
-  const safeQualityLabel = resumeQualityScore.label || 'Unknown';
-  const jobFitToneClasses = getToneClasses(getScoreTone(safeJobFitLabel));
-  const qualityToneClasses = getToneClasses(getScoreTone(safeQualityLabel));
-
-  // Suggested improvement tip from analysis data or fallback
-  const improvementTip = analysisData.detailed_analysis?.keyword_match?.analysis?.suggestedImprovements ||
-    "Your extensive experience in customer experience strategy and stakeholder facilitation aligns well with the Senior Director role...";
+  const improvementTip =
+    analysisData.detailed_analysis?.keyword_match?.analysis?.suggestedImprovements ||
+    'Review the Keywords tab to see which terms from the posting your resume is missing.';
 
   const qualityTip =
     analysisData.detailed_analysis?.resume_structure?.analysis?.suggestedImprovements ||
     analysisData.detailed_analysis?.measurable_results?.analysis?.suggestedImprovements ||
-    "Add clearer impact metrics and make section formatting ATS-friendly.";
+    'Add clearer impact metrics and make section formatting ATS-friendly.';
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col min-h-full">
-      {/* Page Title Section */}
-      <div className="text-center mb-6">
-        <h1 className="text-[24px] font-black text-[#1e293b] mb-1 tracking-tight">
-          Resume Analysis Results
-        </h1>
-        <p className="text-[#64748b] text-sm font-medium">
-          Here's how your resume matches this job
-        </p>
+    <div className="mx-auto flex min-h-full max-w-2xl flex-col px-4 py-4">
+      <div className="mb-6 text-center">
+        <h1 className="mb-1 text-[22px] font-bold tracking-tight text-[#1e293b]">Resume Analysis Results</h1>
+        <p className="text-sm font-medium text-[#64748b]">Here&apos;s how your resume matches this job</p>
+        {analysisData.job_context?.title && (
+          <p className="mt-1 text-xs font-semibold text-[#475569]">
+            {analysisData.job_context.title}
+            {analysisData.job_context.company ? ` at ${analysisData.job_context.company}` : ''}
+          </p>
+        )}
+        {analysisData.engine?.own_key && (
+          <p className="mt-1 text-[11px] text-[#94a3b8]">
+            Analyzed with your own {analysisData.engine.provider === 'openai' ? 'OpenAI' : 'Gemini'} key ({analysisData.engine.model})
+          </p>
+        )}
       </div>
 
-      <div className="space-y-4 flex-grow">
-        {/* Job Fit Score Card */}
-        <div className="bg-white rounded-[24px] shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-[#f1f5f9] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#eff6ff] flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-[#3b82f6]" />
-              </div>
-              <h2 className="text-lg font-bold text-[#1e293b]">Job Fit Score</h2>
-            </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${jobFitToneClasses.bg} ${jobFitToneClasses.text} ${jobFitToneClasses.border}`}>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="text-xs font-bold">{getScoreSymbol(safeJobFitLabel)} {safeJobFitLabel}</span>
-            </div>
-          </div>
+      <div className="flex-grow space-y-4">
+        <ScoreCard
+          title="Job Fit Score"
+          label={analysisData.job_fit_score.label}
+          percentage={analysisData.job_fit_score.percentage}
+          icon={<TrendingUp className="h-5 w-5 text-[#3b82f6]" />}
+          iconBg="bg-[#eff6ff]"
+          barClass="bg-gradient-to-r from-[#6366f1] to-[#4f46e5]"
+          tipLabel="Improvement tip"
+          tip={improvementTip}
+        />
 
-          {/* Progress Bar Container */}
-          <div className="mb-6 px-1">
-            <div className="relative h-3 w-full bg-[#f1f5f9] rounded-full overflow-hidden mb-2">
-              <div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#6366f1] to-[#4f46e5] rounded-full transition-all duration-1000 ease-out"
-                style={{ width: `${safeJobFitPct}%` }}
-              />
-            </div>
-            <div className="relative flex justify-between">
-              {[0, 25, 50, 75, 100].map((marker) => (
-                <div key={marker} className="flex flex-col items-center">
-                  <span className="text-[9px] font-bold text-[#94a3b8]">{marker}%</span>
-                </div>
-              ))}
-              {/* Actual Percentage Float */}
-              <div
-                className="absolute -top-1 font-black text-[#1e293b] text-xs"
-                style={{ left: `calc(${safeJobFitPct}% - 12px)` }}
-              >
-                {safeJobFitPct}%
-              </div>
-            </div>
-          </div>
+        <ScoreCard
+          title="Resume Quality"
+          label={analysisData.resume_quality_score.label}
+          percentage={analysisData.resume_quality_score.percentage}
+          icon={<User className="h-5 w-5 text-[#8b5cf6]" />}
+          iconBg="bg-[#f5f3ff]"
+          barClass="bg-gradient-to-r from-[#22c55e] to-[#16a34a]"
+          tipLabel="Pro tip"
+          tip={qualityTip}
+          showScore={false}
+        />
 
-          {/* Improvement Tip */}
-          <div className="bg-[#eff6ff] rounded-[18px] p-4 flex gap-3 items-start border border-[#dbeafe]">
-            <div className="mt-0.5">
-              <Info className="w-4 h-4 text-[#3b82f6]" />
-            </div>
-            <div className="text-xs leading-relaxed text-[#1e40af]">
-              <span className="font-bold">Improvement tip: </span>
-              {improvementTip}
-            </div>
-          </div>
-        </div>
-
-        {/* Resume Quality Card */}
-        <div className="bg-white rounded-[24px] shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-[#f1f5f9] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] flex items-center justify-center">
-                <User className="w-5 h-5 text-[#8b5cf6]" />
-              </div>
-              <h2 className="text-lg font-bold text-[#1e293b]">Resume Quality</h2>
-            </div>
-            <div className={`px-3 py-1 rounded-full border flex items-center gap-1.5 ${qualityToneClasses.bg} ${qualityToneClasses.text} ${qualityToneClasses.border}`}>
-              <CheckCircle2 className="w-3 h-3" />
-              <span className="text-[10px] font-bold">{getScoreSymbol(safeQualityLabel)} {safeQualityLabel}</span>
-            </div>
-          </div>
-
-          <div className="mb-6 px-1">
-            <div className="relative h-3 w-full bg-[#f1f5f9] rounded-full overflow-hidden mb-2">
-              <div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] rounded-full transition-all duration-1000 ease-out"
-                style={{ width: `${safeQualityPct}%` }}
-              />
-            </div>
-            <div className="text-right text-xs font-black text-[#1e293b]">
-              {safeQualityPct}% ({resumeQualityScore.label || 'Unknown'})
-            </div>
-          </div>
-
-          {/* Pro Tip */}
-          <div className="bg-[#eff6ff] rounded-[18px] p-4 flex gap-3 items-start border border-[#dbeafe]">
-            <div className="mt-0.5">
-              <Info className="w-4 h-4 text-[#3b82f6]" />
-            </div>
-            <div className="text-xs leading-relaxed text-[#1e40af]">
-              <span className="font-bold">Pro tip: </span>
-              {qualityTip}
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
         <div className="flex flex-col items-center gap-3 pt-2">
           <button
             onClick={onViewDetails}
-            className="w-full max-w-[280px] bg-[#4f46e5] text-white py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#4338ca] transition-all transform hover:scale-[1.01] active:scale-[0.99] shadow-md shadow-indigo-100"
+            className="flex w-full max-w-[280px] transform items-center justify-center gap-2 rounded-xl bg-[#4f46e5] px-6 py-3 font-bold text-white shadow-md shadow-indigo-100 transition-all hover:scale-[1.01] hover:bg-[#4338ca] active:scale-[0.99]"
           >
             <span className="text-sm">View Detailed Analysis</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
 
-          <button
-            onClick={onUploadNewResume}
-            className="text-[#4f46e5] font-bold text-xs hover:underline decoration-1 underline-offset-4"
-          >
+          <button onClick={onUploadNewResume} className="text-xs font-bold text-[#4f46e5] decoration-1 underline-offset-4 hover:underline">
             Upload New Resume
           </button>
         </div>
       </div>
-
-      {/* Footer removed to avoid duplication with global footer */}
     </div>
   );
 };

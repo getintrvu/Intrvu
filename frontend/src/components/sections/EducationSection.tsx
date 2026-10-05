@@ -1,197 +1,98 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
-import { AnalysisData } from '../../types/AnalysisData';
+import type { AnalysisData } from '../../types/AnalysisData';
 import DetailedAnalysisHeader from '../DetailedAnalysisHeader';
 
 interface EducationSectionProps {
   analysisData: AnalysisData | null;
 }
 
-const EducationSection: React.FC<EducationSectionProps> = ({ analysisData }) => {
-  const educationData = analysisData?.detailed_analysis?.education_certifications;
+const Row: React.FC<{ text: string; matched: boolean }> = ({ text, matched }) => (
+  <div className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-3">
+    <div className={`flex h-4 w-4 items-center justify-center rounded-[4px] ${matched ? 'bg-[#22c55e]/15' : 'bg-[#f59e0b]/15'}`}>
+      {matched ? <CheckCircle2 className="h-3 w-3 text-[#16a34a]" /> : <AlertTriangle className="h-3 w-3 text-[#d97706]" />}
+    </div>
+    <span className="text-[13px] font-semibold leading-tight text-[#475569]">{text}</span>
+  </div>
+);
 
-  // Placeholder/Loading State
-  if (!analysisData || !educationData) {
+const Empty: React.FC<{ text: string }> = ({ text }) => (
+  <p className="rounded-xl border border-dashed border-[#cbd5e1] bg-white p-3 text-center text-[13px] italic text-[#64748b]">{text}</p>
+);
+
+const EducationSection: React.FC<EducationSectionProps> = ({ analysisData }) => {
+  const education = analysisData?.detailed_analysis.education_certifications;
+
+  if (!analysisData || !education) {
     return (
       <div className="animate-pulse py-8">
         <DetailedAnalysisHeader analysisData={null} />
-        <div className="h-8 bg-gray-100 rounded-lg w-64 mb-6 mt-8"></div>
-        <div className="h-64 bg-gray-50 rounded-3xl w-full"></div>
+        <div className="mb-6 mt-8 h-8 w-64 rounded-lg bg-gray-100"></div>
+        <div className="h-64 w-full rounded-3xl bg-gray-50"></div>
       </div>
     );
   }
 
-  const { score, analysis } = educationData;
-
-  // Calculate percentage if not explicitly provided (many sections use this fallback)
-  const percentage = score?.pointsAwarded && score?.maxPoints
-    ? Math.round((score.pointsAwarded / score.maxPoints) * 100)
-    : 0;
-
-  // Access matched and missing items from analysis
-  // Supporting both possible naming conventions (matchedItems/missingItems or matched/missing)
-  const matchedItems = (analysis as any).matchedItems || (analysis as any).matched || [];
-  const missingItems = (analysis as any).missingItems || (analysis as any).missing || [];
-
-  const certificationMatchesRaw = Array.isArray((analysis as any).certificationMatches)
-    ? (analysis as any).certificationMatches
-    : [];
-  const missingCredentialsRaw = Array.isArray((analysis as any).missingCredentials)
-    ? (analysis as any).missingCredentials
-    : [];
-
-  // Fallback for demo/current data structure if arrays are empty
-  const hasItems = matchedItems.length > 0 || missingItems.length > 0;
-
-  // If no explicit arrays, we derive from degreeFound and status
-  const derivedMatched = !hasItems && analysis.degreeFound && analysis.degreeFound !== 'None'
-    ? [`${analysis.degreeFound} in ${analysis.fieldOfStudy || analysis.degreeType}`]
-    : matchedItems;
-
-  // If no explicit arrays, we derive missing from suggestedImprovements if status is not passing
-  const derivedMissing = !hasItems && educationData.score.passed === false && analysis.suggestedImprovements
-    ? [analysis.suggestedImprovements]
-    : missingItems;
-
-  const certificationMatches = certificationMatchesRaw
-    .filter((item: any) => {
-      const status = String(item?.status || '').toLowerCase();
-      return status.includes('found') || Number(item?.points ?? 0) > 0;
-    })
-    .map((item: any) => String(item?.certification || item?.name || item || '').trim())
-    .filter(Boolean);
-
-  const missingCertifications = [
-    ...missingCredentialsRaw.map((item: any) => String(item?.credential || item?.certification || item || '').trim()),
-    ...certificationMatchesRaw
-      .filter((item: any) => {
-        const status = String(item?.status || '').toLowerCase();
-        return status.includes('not found') || status.includes('missing') || Number(item?.points ?? 0) < 0;
-      })
-      .map((item: any) => String(item?.certification || item?.name || item || '').trim())
-  ].filter(Boolean);
-
-  const certScoreRaw = (score as any)?.matchPercentage ?? (score as any)?.educationCertificationMatchPercentage;
-  const certMatchPercentage = typeof certScoreRaw === 'number'
-    ? Math.max(0, Math.min(100, Math.round(certScoreRaw)))
-    : (() => {
-      const total = certificationMatches.length + missingCertifications.length;
-      return total > 0 ? Math.round((certificationMatches.length / total) * 100) : 0;
-    })();
-
-  let certRating = 'Needs Improvement';
-  if (certMatchPercentage >= 75) {
-    certRating = 'Good alignment';
-  } else if (certMatchPercentage >= 45) {
-    certRating = 'Fair';
-  }
-
-  const hasCertifications = certificationMatches.length > 0 || missingCertifications.length > 0;
-
-  const compactItem = (item: string, index: number, type: 'matched' | 'missing') => {
-    const isMatched = type === 'matched';
-
-    return (
-      <div
-        key={`${type}-${index}`}
-        className="bg-white border border-[#e5e7eb] rounded-xl px-3 py-3 flex items-center gap-3"
-      >
-        <div className={`w-4 h-4 rounded-[4px] flex items-center justify-center ${isMatched ? 'bg-[#22c55e]/15' : 'bg-[#f59e0b]/15'}`}>
-          {isMatched ? (
-            <CheckCircle2 className="w-3 h-3 text-[#16a34a]" />
-          ) : (
-            <AlertTriangle className="w-3 h-3 text-[#d97706]" />
-          )}
-        </div>
-        <span className="text-[13px] font-semibold text-[#475569] leading-tight">{item}</span>
-      </div>
-    );
-  };
+  const { score, analysis } = education;
+  const percentage = Math.round((score.pointsAwarded / score.maxPoints) * 100);
+  const hasDegree = analysis.degreeFound && analysis.degreeFound !== 'None';
+  const required = analysis.required !== false; // older results do not carry the field
+  // The degree text usually already names the field ("B.Tech in Computer Science"): add it only when it doesn't.
+  const field = analysis.fieldOfStudy?.trim();
+  const degreeLabel = hasDegree
+    ? field && !analysis.degreeFound.toLowerCase().includes(field.toLowerCase())
+      ? `${analysis.degreeFound} in ${field}`
+      : analysis.degreeFound
+    : null;
 
   return (
-    <div className="min-h-full flex flex-col max-w-4xl mx-auto py-3">
-      {/* Shared Header */}
+    <div className="mx-auto flex min-h-full max-w-4xl flex-col py-3">
       <DetailedAnalysisHeader analysisData={analysisData} />
 
-      {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-4 tracking-tight">Education Alignment</h2>
+        <h2 className="mb-4 text-[17px] font-bold tracking-tight text-[#1e293b]">Education Alignment</h2>
 
-        <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-
-          {/* Alignment Percentage Section */}
-          <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-4 border border-[#d1d5db]">
+        <div className="rounded-2xl border border-[#e2e8f0] bg-[#f1f5f9] p-4">
+          <div className="mb-4 flex items-center justify-between rounded-xl border border-[#d1d5db] bg-[#e5e7eb] px-4 py-3">
             <span className="text-[13px] font-semibold text-[#475569]">Alignment Percentage :</span>
-            <span className="text-[13px] font-black text-[#1e293b]">
-              {percentage}% ( {score.rating || (score.passed ? 'Requirement Met' : 'Requirement Not Met')} )
+            <span className="text-[13px] font-bold text-[#1e293b]">
+              {percentage}% ( {score.rating} )
             </span>
           </div>
 
           <div className="space-y-5">
-            {/* Matched Section */}
+            {!required && (
+              <p className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-3 text-[13px] leading-relaxed text-[#166534]">
+                This job does not ask for a degree, so there is no education penalty.
+              </p>
+            )}
+            {required && analysis.requiredField && (
+              <p className="rounded-xl border border-[#e2e8f0] bg-white p-3 text-[13px] leading-relaxed text-[#475569]">
+                The posting asks for a degree in <span className="font-semibold">{analysis.requiredField}</span>.
+              </p>
+            )}
+
             <section>
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Matched</h3>
+              <h3 className="mb-2 text-sm font-semibold text-[#475569]">Matched</h3>
               <div className="space-y-2.5">
-                {derivedMatched.map((item: string, index: number) => compactItem(item, index, 'matched'))}
-                {derivedMatched.length === 0 && (
-                  <p className="text-[13px] text-[#64748b] italic p-3 bg-white rounded-xl text-center border border-dashed border-[#cbd5e1]">
-                    No matched education found.
-                  </p>
+                {score.passed && degreeLabel ? (
+                  <Row text={degreeLabel} matched />
+                ) : (
+                  <Empty text={required ? 'No matched education found.' : 'No degree listed, and none is required.'} />
                 )}
               </div>
             </section>
 
-            {/* Missing Section */}
             <section>
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Missing</h3>
+              <h3 className="mb-2 text-sm font-semibold text-[#475569]">Missing</h3>
               <div className="space-y-2.5">
-                {derivedMissing.map((item: string, index: number) => compactItem(item, index, 'missing'))}
-                {derivedMissing.length === 0 && (
-                  <p className="text-[13px] text-[#64748b] italic p-3 bg-white rounded-xl text-center border border-dashed border-[#cbd5e1]">
-                    No missing requirements.
-                  </p>
+                {score.passed ? (
+                  <Empty text="No missing requirements." />
+                ) : (
+                  <Row text={analysis.suggestedImprovements || "A Bachelor's degree or equivalent was not found."} matched={false} />
                 )}
               </div>
             </section>
-          </div>
-        </div>
-
-        {/* Certifications Block */}
-        <div className="mt-4">
-          <h3 className="text-xl font-black text-[#1e293b] mb-3 tracking-tight">Certifications</h3>
-          <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-            <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-4 border border-[#d1d5db]">
-              <span className="text-[13px] font-semibold text-[#475569]">Match Percentage :</span>
-              <span className="text-[13px] font-black text-[#1e293b]">
-                {certMatchPercentage}% ( {certRating} )
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {certificationMatches.map((cert) => (
-                <span
-                  key={`cert-match-${cert}`}
-                  className="px-5 py-2 rounded-full text-[12px] font-semibold bg-[#4f46e5] text-white min-w-[92px] text-center"
-                >
-                  {cert}
-                </span>
-              ))}
-
-              {missingCertifications.map((cert) => (
-                <span
-                  key={`cert-missing-${cert}`}
-                  className="px-5 py-2 rounded-full text-[12px] font-semibold bg-[#e5e7eb] text-[#334155] min-w-[92px] text-center"
-                >
-                  {cert}
-                </span>
-              ))}
-
-              {!hasCertifications && (
-                <p className="text-[13px] text-[#64748b] italic p-3 bg-white rounded-xl text-center border border-dashed border-[#cbd5e1] w-full">
-                  No certification requirements detected for this job.
-                </p>
-              )}
-            </div>
           </div>
         </div>
       </div>

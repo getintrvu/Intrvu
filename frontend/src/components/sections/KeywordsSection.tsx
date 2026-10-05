@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Item } from '../../types/AnalysisData';
 import { AnalysisData } from '../../types/AnalysisData';
 import DetailedAnalysisHeader from '../DetailedAnalysisHeader';
 
@@ -31,7 +32,7 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({ analysisData }) => {
   const partialMatches = Array.isArray(keywordData.analysis?.partialMatches) ? keywordData.analysis.partialMatches : [];
   const missingKeywords = Array.isArray(keywordData.analysis?.missingKeywords) ? keywordData.analysis.missingKeywords : [];
 
-  const toKeywordString = (item: any) => String(item?.keyword ?? item);
+  const toKeywordString = (item: Item) => String(item?.keyword ?? item);
 
   const matchedKeywords = [...strongMatches, ...partialMatches].map(toKeywordString);
   const missingKeywordStrings = missingKeywords.map(toKeywordString);
@@ -52,21 +53,21 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({ analysisData }) => {
 
       {/* Keywords Match Section */}
       <section className="mt-2 mb-8">
-        <h2 className="text-xl font-black text-[#1e293b] mb-4 tracking-tight">Keywords Match</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-4 tracking-tight">Keywords Match</h2>
 
-        <div className="bg-[#f8fafc] border border-[#f1f5f9] rounded-2xl p-4 flex items-center justify-between mb-8 shadow-sm">
-          <span className="text-sm font-bold text-[#64748b]">Match Percentage :</span>
-          <span className="text-sm font-black text-[#1e293b]">
+        <div className="bg-[#f8fafc] border border-[#f1f5f9] rounded-xl px-4 py-3 flex items-center justify-between mb-6">
+          <span className="text-[13px] font-medium text-[#64748b]">Match Percentage :</span>
+          <span className="text-[13px] font-bold text-[#1e293b]">
             {safeMatchPct}% ( {safeRating} )
           </span>
         </div>
 
         {/* Dynamic Keywords Tags Grid */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           {matchedKeywords.map((keyword) => (
             <div
               key={makeUniqueKey('matched', keyword)}
-              className="px-6 py-2.5 bg-[#4f46e5] text-white text-sm font-extrabold rounded-full shadow-sm hover:bg-[#4338ca] transition-colors cursor-default"
+              className="px-3.5 py-1.5 bg-[#4f46e5] text-white text-[13px] font-semibold leading-snug rounded-full hover:bg-[#4338ca] transition-colors cursor-default"
             >
               {keyword}
             </div>
@@ -75,7 +76,7 @@ const KeywordsSection: React.FC<KeywordsSectionProps> = ({ analysisData }) => {
           {missingKeywordStrings.map((keyword) => (
             <div
               key={makeUniqueKey('missing', keyword)}
-              className="px-6 py-2.5 bg-[#f1f5f9] text-[#475569] text-sm font-extrabold rounded-full border border-transparent hover:border-gray-300 transition-all cursor-default"
+              className="px-3.5 py-1.5 bg-[#f1f5f9] text-[#475569] text-[13px] font-semibold leading-snug rounded-full border border-transparent hover:border-gray-300 transition-all cursor-default"
             >
               {keyword}
             </div>

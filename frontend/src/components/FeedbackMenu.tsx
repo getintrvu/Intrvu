@@ -1,4 +1,5 @@
 import React from 'react';
+import { FEEDBACK_FORM_URL, SUPPORT_EMAIL } from '../lib/config';
 
 interface FeedbackMenuProps {
   onClose: () => void;
@@ -20,8 +21,9 @@ const FeedbackMenu: React.FC<FeedbackMenuProps> = ({ onClose }) => {
             onClick={() => {
               try {
                 window.open(
-                  'https://mail.google.com/mail/?view=cm&fs=1&to=getintrvu@gmail.com&su=Support%20request',
-                  '_blank'
+                  `https://mail.google.com/mail/?view=cm&fs=1&to=${SUPPORT_EMAIL}&su=Support%20request`,
+                  '_blank',
+                  'noopener,noreferrer'
                 );
               } finally {
                 onClose();
@@ -36,8 +38,9 @@ const FeedbackMenu: React.FC<FeedbackMenuProps> = ({ onClose }) => {
             onClick={() => {
               try {
                 window.open(
-                  'https://docs.google.com/forms/d/e/1FAIpQLScPbR00X61FeowQmDIkfuU4AKMcoGm335DI2UOGHwdYVX2_sA/viewform',
-                  '_blank'
+                  FEEDBACK_FORM_URL,
+                  '_blank',
+                  'noopener,noreferrer'
                 );
               } finally {
                 onClose();

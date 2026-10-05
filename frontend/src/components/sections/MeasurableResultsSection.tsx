@@ -53,7 +53,7 @@ const MeasurableResultsSection: React.FC<MeasurableResultsSectionProps> = ({ ana
 
       {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-3 tracking-tight">Measurable Results Analysis</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-3 tracking-tight">Measurable Results Analysis</h2>
 
         <div className="space-y-4">
           {/* Measurable Results Found Section */}
@@ -61,10 +61,10 @@ const MeasurableResultsSection: React.FC<MeasurableResultsSectionProps> = ({ ana
             <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
               <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-4 border border-[#d1d5db]">
                 <span className="text-[13px] font-semibold text-[#475569]">Measurable Results Count:</span>
-                <span className="text-[13px] font-black text-[#1e293b]">{measurableCount}</span>
+                <span className="text-[13px] font-bold text-[#1e293b]">{measurableCount}</span>
               </div>
 
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Measurable Results Found</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Measurable Results Found</h3>
 
               {measurableResults.length > 0 ? (
                 <div className="space-y-2.5">
@@ -93,7 +93,7 @@ const MeasurableResultsSection: React.FC<MeasurableResultsSectionProps> = ({ ana
               {/* Opportunities for Metrics Section */}
               {opportunitiesForMetrics.length > 0 && (
                 <div className="mt-4">
-                  <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Opportunities for Metrics</h3>
+                  <h3 className="text-sm font-semibold text-[#475569] mb-2">Opportunities for Metrics</h3>
                   <div className="space-y-2.5">
                     {opportunitiesForMetrics.map((opportunity) => {
                       const bulletPoint = String(opportunity?.bulletPoint || '').trim();
@@ -121,7 +121,7 @@ const MeasurableResultsSection: React.FC<MeasurableResultsSectionProps> = ({ ana
           {/* Suggestions Section */}
           {suggestionsList.length > 0 && (
             <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Suggestions</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Suggestions</h3>
               <div className="space-y-2">
                 {suggestionsList.map((suggestion) => {
                   const suggestionText = suggestion.endsWith('.') ? suggestion : `${suggestion}.`;

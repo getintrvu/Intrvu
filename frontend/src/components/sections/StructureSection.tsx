@@ -10,17 +10,6 @@ interface StructureSectionProps {
 const StructureSection: React.FC<StructureSectionProps> = ({ analysisData }) => {
   const structureData = analysisData?.detailed_analysis?.resume_structure;
 
-  const completedMustHave = Number(structureData?.score?.completedMustHave || 0);
-  const totalMustHave = Number(structureData?.score?.totalMustHave || 0);
-  const completedNiceToHave = Number(structureData?.score?.completedNiceToHave || 0);
-  const totalNiceToHave = Number((structureData as any)?.score?.totalNiceToHave || 0);
-  const mustHavePct = totalMustHave > 0
-    ? Math.round((completedMustHave / totalMustHave) * 100)
-    : 0;
-  const niceToHavePct = totalNiceToHave > 0
-    ? Math.round((completedNiceToHave / totalNiceToHave) * 100)
-    : 0;
-
   // Placeholder/Loading State
   if (!analysisData || !structureData) {
     return (
@@ -60,24 +49,13 @@ const StructureSection: React.FC<StructureSectionProps> = ({ analysisData }) => 
 
       {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-3 tracking-tight">Resume Structure Analysis</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-3 tracking-tight">Resume Structure Analysis</h2>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#eef2ff] border border-[#e0e7ff] rounded-xl p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#4338ca] opacity-80">Must-Have Coverage</p>
-              <p className="text-[15px] font-black text-[#1e293b] mt-1">{completedMustHave}/{totalMustHave} ({mustHavePct}%)</p>
-            </div>
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#475569] opacity-80">Nice-to-Have Coverage</p>
-              <p className="text-[15px] font-black text-[#1e293b] mt-1">{completedNiceToHave}/{totalNiceToHave} ({niceToHavePct}%)</p>
-            </div>
-          </div>
-
           {/* Section Status Area */}
           <div>
             <div className="bg-[#f1f5f9] rounded-2xl p-4 border border-[#e2e8f0]">
-              <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Section Status</h3>
+              <h3 className="text-sm font-semibold text-[#475569] mb-2">Section Status</h3>
 
               <div className="space-y-2">
                 {structureData.analysis.sectionStatus.map((section, index) => {
@@ -115,6 +93,23 @@ const StructureSection: React.FC<StructureSectionProps> = ({ analysisData }) => 
               </div>
             </div>
           </div>
+
+          {/* Formatting issues that applicant tracking systems struggle with (spec appendix C) */}
+          {structureData.analysis.atsIssues?.length > 0 && (
+            <div className="rounded-2xl border border-[#fde68a] bg-[#fffbeb] p-4">
+              <h3 className="mb-2 text-sm font-semibold text-[#92400e]">Formatting issues</h3>
+              <ul className="space-y-2">
+                {structureData.analysis.atsIssues.map((item, index) => (
+                  <li key={`${item.issue}-${index}`} className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#d97706]" />
+                    <span className="text-[12px] leading-[1.45] text-[#78350f]">
+                      <span className="font-semibold">{item.issue}.</span> {item.detail}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Suggestions */}
           {structureData.analysis.suggestedImprovements && (

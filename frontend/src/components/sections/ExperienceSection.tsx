@@ -77,12 +77,12 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ analysisData }) =
 
       {/* Main Content Area */}
       <div className="mt-2">
-        <h2 className="text-xl font-black text-[#1e293b] mb-4 tracking-tight">Job Experience Alignment</h2>
+        <h2 className="text-[17px] font-bold text-[#1e293b] mb-4 tracking-tight">Job Experience Alignment</h2>
 
         {/* Alignment Percentage Section */}
         <div className="bg-[#e5e7eb] rounded-xl px-4 py-3 flex items-center justify-between mb-5 border border-[#d1d5db]">
           <span className="text-[13px] font-semibold text-[#475569]">Alignment Percentage :</span>
-          <span className="text-[13px] font-black text-[#1e293b]">
+          <span className="text-[13px] font-bold text-[#1e293b]">
             {score.alignmentPercentage}% ( {score.rating} )
           </span>
         </div>
@@ -90,7 +90,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ analysisData }) =
         <div className="bg-[#f1f5f9] rounded-2xl border border-[#e2e8f0] p-4 space-y-5">
           {/* Strong Matches Section */}
           <section>
-            <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Strong Matches</h3>
+            <h3 className="text-sm font-semibold text-[#475569] mb-2">Strong Matches</h3>
             <div className="space-y-2.5">
               {strongMatches.map((item, index) => renderMatchCard(item, index, 'strong'))}
               {strongMatches.length === 0 && (
@@ -103,7 +103,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ analysisData }) =
 
           {/* Partial Matches Section */}
           <section>
-            <h3 className="text-[15px] font-extrabold text-[#475569] mb-2">Partial Matches</h3>
+            <h3 className="text-sm font-semibold text-[#475569] mb-2">Partial Matches</h3>
             <div className="space-y-2.5">
               {partialMatches.map((item, index) => renderMatchCard(item, index, 'partial'))}
               {partialMatches.length === 0 && (
