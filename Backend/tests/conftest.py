@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 from app.auth import get_verifier
 from app.config import get_settings
 from app.errors import AppError
-from app.llm.client import get_llm
+from app.llm.factory import get_llm_factory
 from app.llm.models import (
     BulletReview, Cliche, DegreeEvidence, JobFitExtraction, KeywordHit, MetricOpportunity,
     MissingSkill, QualityExtraction, QuantifiedBullet, RoleAssessment, SectionsPresent,
@@ -114,6 +114,10 @@ def quality_extraction() -> QualityExtraction:
 
 
 class FakeLLM:
+    provider = "fake"
+    model = "fake-model"
+    byok = False
+
     def __init__(self, fail: Exception | None = None):
         self.fail = fail
         self.calls = 0
@@ -168,7 +172,16 @@ def client(llm, quota, user_data):
     get_settings.cache_clear()
     get_verifier.cache_clear()
     app = create_app()
-    app.dependency_overrides[get_llm] = lambda: llm
+    # The factory is what picks the server LLM or one built from the user's own key. Tests record
+    # what it was asked for and always hand back the fake.
+    llm.requested = []
+
+    def factory(settings, byok):
+        llm.requested.append(byok)
+        llm.byok = byok is not None
+        return llm
+
+    app.dependency_overrides[get_llm_factory] = lambda: factory
     app.dependency_overrides[get_quota_service] = lambda: quota
     app.dependency_overrides[get_user_data_service] = lambda: user_data
     return TestClient(app)

@@ -5,9 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.errors import AppError, app_error_handler, unhandled_error_handler
+from app.llm.redact import RedactingFilter
 from app.routes import router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+for _handler in logging.getLogger().handlers:
+    _handler.addFilter(RedactingFilter())  # no API key ever reaches a log line
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
@@ -29,7 +32,7 @@ def create_app() -> FastAPI:
         allow_origins=settings.cors_origins,
         allow_credentials=False,  # Bearer tokens, no cookies
         allow_methods=["GET", "POST", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "X-LLM-Provider", "X-LLM-Key", "X-LLM-Model"],
         max_age=3600,
     )
     app.include_router(router)

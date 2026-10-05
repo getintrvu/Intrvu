@@ -9,10 +9,12 @@ from app import analysis
 from app.auth import User, get_current_user
 from app.config import Settings, get_settings
 from app.errors import bad_request, quota_exceeded
-from app.llm.client import LLM, get_llm
+from app.llm.client import LLM
+from app.llm.factory import ByokConfig, get_byok, get_request_llm
+from app.llm.models import KeyCheck
 from app.pdf import extract_resume_text
 from app.quota import QuotaService, UserDataService, get_quota_service, get_user_data_service
-from app.schemas import AnalyzeResponse, JobInput, UsageResponse
+from app.schemas import AnalyzeResponse, JobInput, KeyCheckResponse, UsageResponse
 from app.text import clean_text
 
 logger = logging.getLogger(__name__)
@@ -60,7 +62,7 @@ async def analyze_resume(
     jobData: str = Form(...),
     user: User = Depends(get_current_user),
     settings: Settings = Depends(get_settings),
-    llm: LLM = Depends(get_llm),
+    llm: LLM = Depends(get_request_llm),
     quota: QuotaService = Depends(get_quota_service),
 ):
     # Cheap validation first, so bad requests never cost quota or an LLM call.
@@ -76,6 +78,11 @@ async def analyze_resume(
         max_chars=settings.max_resume_chars,
     )
 
+    # Users who bring their own key pay their provider directly, so the daily quota (which exists to
+    # cap our own AI spend) does not apply to them.
+    if llm.byok:
+        return await analysis.analyze(resume_text, job, llm, settings)
+
     status = await quota.consume(user.id)
     if not status.allowed:
         raise quota_exceeded(status.used, status.limit)
@@ -85,3 +92,16 @@ async def analyze_resume(
     except Exception:
         await quota.release(user.id)  # the user should not pay for our failure
         raise
+
+
+@router.post("/v1/key/check", response_model=KeyCheckResponse)
+async def check_key(
+    _user: User = Depends(get_current_user),
+    byok: ByokConfig | None = Depends(get_byok),
+    llm: LLM = Depends(get_request_llm),
+):
+    """Verify a user-supplied key with one tiny request. The key is used for this call only."""
+    if byok is None:
+        raise bad_request("invalid_llm_key", "Send your API key in the X-LLM-Key header.")
+    await llm.extract(KeyCheck, "Reply with the requested JSON only.", "Return ok = true.")
+    return KeyCheckResponse(ok=True, provider=llm.provider, model=llm.model)

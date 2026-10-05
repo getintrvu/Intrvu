@@ -35,12 +35,21 @@ class JobContext(BaseModel):
     description_length: int
 
 
+class EngineInfo(BaseModel):
+    """Which AI produced the analysis."""
+
+    provider: str
+    model: str
+    own_key: bool
+
+
 class AnalyzeResponse(BaseModel):
     version: str
     job_context: JobContext
     job_fit_score: OverallScore
     resume_quality_score: OverallScore
     detailed_analysis: dict[str, Any]
+    engine: EngineInfo
     process_time_seconds: float
 
 
@@ -48,3 +57,9 @@ class UsageResponse(BaseModel):
     used: int
     limit: int
     remaining: int
+
+
+class KeyCheckResponse(BaseModel):
+    ok: bool
+    provider: str
+    model: str

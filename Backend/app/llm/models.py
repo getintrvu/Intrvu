@@ -125,3 +125,9 @@ class QualityExtraction(BaseModel):
 
     bullets: list[BulletReview]  # up to 10 representative bullets
     bullets_advice: str
+
+
+class KeyCheck(BaseModel):
+    """Smallest possible structured reply, used to verify a user-supplied key."""
+
+    ok: bool

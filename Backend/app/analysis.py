@@ -8,7 +8,7 @@ from app.config import Settings
 from app.llm import prompts
 from app.llm.client import LLM
 from app.llm.models import JobFitExtraction, QualityExtraction
-from app.schemas import AnalyzeResponse, JobContext, JobInput
+from app.schemas import AnalyzeResponse, EngineInfo, JobContext, JobInput
 from app.text import clean_text
 
 logger = logging.getLogger(__name__)
@@ -61,5 +61,6 @@ async def analyze(resume_text: str, job: JobInput, llm: LLM, settings: Settings)
             "measurable_results": measurable,
             "bullet_point_effectiveness": bullets,
         },
+        engine=EngineInfo(provider=llm.provider, model=llm.model, own_key=llm.byok),
         process_time_seconds=round(elapsed, 2),
     )
