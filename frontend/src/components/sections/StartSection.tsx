@@ -10,6 +10,7 @@ import { PROVIDERS, engineId } from '../../lib/byok';
 import { MAX_PDF_BYTES, MAX_PDF_MB, MIN_JOB_DESCRIPTION_CHARS } from '../../lib/config';
 import { analysisKey, getCachedAnalysis, saveAnalysis, type CachedAnalysis } from '../../lib/analysisCache';
 import { jobKey } from '../../lib/jobKey';
+import { quotaResetTime } from '../../lib/quota';
 import { clearResume, loadResume, saveResume } from '../../lib/resumeStore';
 
 interface StartSectionProps {
@@ -58,6 +59,8 @@ const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings })
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<{ message: string; keyProblem: boolean } | null>(null);
   const [cached, setCached] = useState<CachedAnalysis | null>(null);
+  // Set when the server says today's analyses are used up, even if the usage count has not loaded yet.
+  const [quotaHit, setQuotaHit] = useState(false);
 
   // Restore the resume from the last session.
   useEffect(() => {
@@ -110,12 +113,17 @@ const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings })
 
   const descriptionLength = job?.jobDescription?.length ?? 0;
   const hasEnoughDescription = descriptionLength >= MIN_JOB_DESCRIPTION_CHARS;
+  // A new day (or a refreshed count) lifts a quota block that came from the server's answer.
+  useEffect(() => {
+    if (usage && usage.remaining > 0) setQuotaHit(false);
+  }, [usage]);
+
   // People on their own key are not limited by our daily quota.
-  const outOfQuota = !byok && usage !== null && usage.remaining === 0;
+  const outOfQuota = !byok && (quotaHit || (usage !== null && usage.remaining === 0));
   const ready = !!file && !!job && hasEnoughDescription && !isAnalyzing;
   // Viewing a saved result costs nothing, so it does not depend on the daily quota.
   const canAnalyze = ready && (!outOfQuota || !!cached);
-
+  const dailyLimit = usage?.limit;
 
   /** `fresh` skips the saved result and runs a new analysis (which replaces it). */
   const handleAnalyze = async (fresh = false) => {
@@ -128,7 +136,12 @@ const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings })
       void analysisKey(file, job.jobDescription, engine).then((key) => saveAnalysis(key, result));
       onResult(result, jobKey(job.jobDescription)); // the job as it was when Analyze was clicked
     } catch (err) {
-      setError({ message: userMessage(err), keyProblem: err instanceof ApiError && KEY_ERROR_CODES.has(err.code) });
+      if (err instanceof ApiError && err.code === 'quota_exceeded') {
+        // One clear message (below the button) instead of an error on top of it.
+        setQuotaHit(true);
+      } else {
+        setError({ message: userMessage(err), keyProblem: err instanceof ApiError && KEY_ERROR_CODES.has(err.code) });
+      }
     } finally {
       setIsAnalyzing(false);
       void refreshUsage();
@@ -214,6 +227,8 @@ const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings })
           </span>
         ) : cached ? (
           'View saved result'
+        ) : outOfQuota ? (
+          'Daily limit reached'
         ) : (
           'Analyze'
         )}
@@ -240,7 +255,8 @@ const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings })
           </button>
         </p>
       ) : (
-        usage && (
+        usage &&
+        !outOfQuota && (
           <p className="mb-6 text-center text-xs text-gray-500">
             {usage.remaining} of {usage.limit} analyses left today ·{' '}
             <button onClick={onOpenSettings} className="underline hover:text-blue-700">
@@ -257,7 +273,11 @@ const StartSection: React.FC<StartSectionProps> = ({ onResult, onOpenSettings })
           full description.
         </Notice>
       )}
-      {outOfQuota && <Notice tone="warn">You have used all your analyses for today. Come back tomorrow.</Notice>}
+      {outOfQuota && (
+        <Notice tone="warn" action={{ label: 'Use your own key', onClick: onOpenSettings }}>
+          You have used {dailyLimit ? `all ${dailyLimit}` : 'all'} of today&apos;s analyses. They reset at {quotaResetTime()}.
+        </Notice>
+      )}
       {error && (
         <Notice tone="error" action={error.keyProblem ? { label: 'Open AI settings', onClick: onOpenSettings } : undefined}>
           {error.message}
