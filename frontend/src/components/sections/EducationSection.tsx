@@ -36,6 +36,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ analysisData }) => 
   const { score, analysis } = education;
   const percentage = Math.round((score.pointsAwarded / score.maxPoints) * 100);
   const hasDegree = analysis.degreeFound && analysis.degreeFound !== 'None';
+  const required = analysis.required !== false; // older results do not carry the field
   // The degree text usually already names the field ("B.Tech in Computer Science"): add it only when it doesn't.
   const field = analysis.fieldOfStudy?.trim();
   const degreeLabel = hasDegree
@@ -60,10 +61,25 @@ const EducationSection: React.FC<EducationSectionProps> = ({ analysisData }) => 
           </div>
 
           <div className="space-y-5">
+            {!required && (
+              <p className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-3 text-[13px] leading-relaxed text-[#166534]">
+                This job does not ask for a degree, so there is no education penalty.
+              </p>
+            )}
+            {required && analysis.requiredField && (
+              <p className="rounded-xl border border-[#e2e8f0] bg-white p-3 text-[13px] leading-relaxed text-[#475569]">
+                The posting asks for a degree in <span className="font-semibold">{analysis.requiredField}</span>.
+              </p>
+            )}
+
             <section>
               <h3 className="mb-2 text-sm font-semibold text-[#475569]">Matched</h3>
               <div className="space-y-2.5">
-                {score.passed && degreeLabel ? <Row text={degreeLabel} matched /> : <Empty text="No matched education found." />}
+                {score.passed && degreeLabel ? (
+                  <Row text={degreeLabel} matched />
+                ) : (
+                  <Empty text={required ? 'No matched education found.' : 'No degree listed, and none is required.'} />
+                )}
               </div>
             </section>
 

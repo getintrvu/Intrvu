@@ -33,6 +33,8 @@ export type JobExperience = Component<
 
 export type EducationCertifications = Component<{ passed: boolean }, {
   status: string; degreeFound: string; degreeType: string; fieldOfStudy: string;
+  /** Whether the job posting asks for a degree, and the field it names (if any). */
+  required: boolean; requiredField: string;
   educationMatch: Item[]; certificationMatches: Item[]; missingCredentials: Item[];
 }>;
 

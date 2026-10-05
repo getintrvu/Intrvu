@@ -10,7 +10,7 @@ const MAX_ENTRIES = 20;
 
 /** Must match `SCORING_VERSION` in Backend/app/analysis.py. Bump both when prompts or scoring
  * change, so old saved results are not shown for the new rules. */
-export const SCORING_VERSION = 'v5.0';
+export const SCORING_VERSION = 'v5.1';
 
 export interface CachedAnalysis {
   key: string;

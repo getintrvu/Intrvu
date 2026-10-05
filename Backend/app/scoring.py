@@ -142,27 +142,49 @@ _DEGREE_TYPES = {
 
 
 def score_education(ex: JobFitExtraction) -> Component:
-    """20 pts, binary gate: a bachelor's degree or higher earns all 20, anything else 0."""
-    passed = ex.degree.level in {"bachelor", "master", "doctorate"}
-    points = 20 if passed else 0
-    advice = (
-        f"Your {ex.degree.degree_found} meets the education requirement."
-        if passed
-        else ex.education_advice or "Add a Bachelor's degree or equivalent if you have one."
-    )
+    """20 pts, binary gate (spec 8), applied only when the job asks for it (spec hard rule 17).
+
+    - The posting asks for no degree: no penalty, the 20 points are awarded.
+    - The posting asks for a degree: the resume needs a bachelor's or higher.
+    - The posting names a field of study: the degree also has to be in that (or a related) field
+      (spec 8.4: field is ignored unless explicitly required).
+    """
+    has_degree = ex.degree.level in {"bachelor", "master", "doctorate"}
+    required = ex.degree_required
+    field = ex.required_field.strip()
+    field_ok = not (required and field) or ex.field_matches_requirement
+
+    if not required:
+        passed, status, rating = True, "Not required", "No degree required"
+        advice = "This job does not ask for a degree, so there is no education penalty."
+    elif has_degree and field_ok:
+        passed, status, rating = True, "Pass", "Requirement Met"
+        advice = f"Your {ex.degree.degree_found} meets the education requirement."
+    elif has_degree:
+        passed, status, rating = False, "Fail", "Requirement Not Met"
+        advice = (
+            f"The posting asks for a degree in {field}; yours is {ex.degree.degree_found}"
+            + (f" in {ex.degree.field_of_study}." if ex.degree.field_of_study else ".")
+        )
+    else:
+        passed, status, rating = False, "Fail", "Requirement Not Met"
+        advice = ex.education_advice or "The posting asks for a degree; add your Bachelor's degree or equivalent if you have one."
+
     return {
         "score": {
-            "pointsAwarded": points,
+            "pointsAwarded": 20 if passed else 0,
             "maxPoints": 20,
             "passed": passed,
-            "rating": "Requirement Met" if passed else "Requirement Not Met",
+            "rating": rating,
             "ratingSymbol": "✅" if passed else "❌",
         },
         "analysis": {
             "degreeFound": ex.degree.degree_found,
             "degreeType": _DEGREE_TYPES[ex.degree.level],
             "fieldOfStudy": ex.degree.field_of_study,
-            "status": "Pass" if passed else "Fail",
+            "required": required,
+            "requiredField": field,
+            "status": status,
             "symbol": "✅" if passed else "❌",
             "suggestedImprovements": advice,
             "educationMatch": [],

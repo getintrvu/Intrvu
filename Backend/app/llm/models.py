@@ -52,6 +52,10 @@ class JobFitExtraction(BaseModel):
     experience_advice: str
 
     degree: DegreeEvidence
+    # What the POSTING asks for (spec 8 / hard rule 17: no penalty unless the job requires it).
+    degree_required: bool  # the posting states any degree, diploma or education requirement
+    required_field: str  # field of study the posting explicitly requires ("" when it names none)
+    field_matches_requirement: bool  # the candidate's degree is in that field or a clearly related one
     education_advice: str
 
     hard_skills: list[SkillHit]

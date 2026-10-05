@@ -9,6 +9,7 @@ import logging
 from functools import lru_cache
 from typing import Literal, Protocol, TypeVar
 
+import httpx
 from pydantic import BaseModel
 
 from app.config import Settings, get_settings
@@ -171,6 +172,9 @@ class GeminiLLM(BaseLLM):
             response = await client.aio.models.generate_content(model=model, contents=prompt, config=config)
         except errors.APIError as exc:
             raise self._classify(exc) from exc
+        except (httpx.TransportError, httpx.TimeoutException) as exc:
+            # The connection dropped or timed out before Gemini answered: worth retrying.
+            raise ProviderError("transient", None, type(exc).__name__) from exc
         parsed = response.parsed
         if isinstance(parsed, schema):
             return parsed

@@ -1,5 +1,6 @@
 """GeminiLLM retry / fallback behaviour, with a fake SDK client (no network)."""
 import pytest
+import httpx
 from google.genai import errors
 
 from app.config import Settings
@@ -85,3 +86,22 @@ async def test_malformed_json_is_retried_once():
     llm, models = llm_with([FakeResponse(parsed=None, text="{not json"), FakeResponse(parsed=quality_extraction())])
     await call(llm)
     assert len(models.models_used) == 2
+
+
+async def test_a_dropped_connection_is_retried_not_surfaced_as_a_crash():
+    llm, models = llm_with([httpx.RemoteProtocolError("Server disconnected without sending a response."), FakeResponse(parsed=quality_extraction())])
+    await call(llm)
+    assert models.models_used == ["primary", "fallback"]
+
+
+async def test_a_network_timeout_is_retried():
+    llm, models = llm_with([httpx.ReadTimeout("timed out"), FakeResponse(parsed=quality_extraction())])
+    await call(llm)
+    assert len(models.models_used) == 2
+
+
+async def test_persistent_network_failure_becomes_a_clean_503():
+    llm, _ = llm_with([httpx.ConnectError("boom"), httpx.ConnectError("boom")])
+    with pytest.raises(AppError) as err:
+        await call(llm)
+    assert err.value.status_code == 503 and err.value.code == "llm_busy"

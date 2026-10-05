@@ -15,7 +15,7 @@ Audited against [`scoring-spec-v4.md`](scoring-spec-v4.md) and the code in `Back
 | 6 | Keyword match: embeddings, cosine thresholds | **Partial**: LLM judgement instead of cosine similarity |
 | 6.4 | Keyword stuffing (> 3 per 100 words) | **Partial**: decided by the model, not measured |
 | 7 | Experience alignment and normalization | OK, except the negative cap |
-| 8 | Education gate | **Partial**, and **Conflict** with hard rule 17 when the job asks for no degree |
+| 8 | Education gate | OK (**fixed**): applied only when the job asks for a degree; named field checked; 20 points awarded otherwise |
 | 9 | Skills (+1 / +0.5 / -1, de-dup, cap) | OK, except importance weighting and the negative cap |
 | 10 | Resume Quality shown as a label only | OK (**fixed**): tier and tip only |
 | 12 | Resume Structure | **Partial**: ATS penalties added (**fixed**); conditional certifications still missing |
@@ -25,7 +25,7 @@ Audited against [`scoring-spec-v4.md`](scoring-spec-v4.md) and the code in `Back
 | 15 | Bullet effectiveness | OK |
 | 16 | Certification handling | **Missing** |
 | 17 | Hard rules | One **Conflict** (see 8), the rest OK |
-| App. B | Degree equivalency, configurable and region-aware | **Partial** |
+| App. B | Degree equivalency, configurable and region-aware | **Partial**: Canadian, Indian and other credentials covered in the prompt (live-tested); not yet a configurable data file |
 | App. C | ATS formatting rules | **Partial** (**added**): column/table layouts, many images, non-standard headings. Not detectable: text inside images, tables drawn as lines |
 | App. D | Semantic matching must be stable | **Partial**: not stable (see 6) |
 
@@ -47,7 +47,9 @@ The spec asks for embeddings, cosine similarity, a 0.80 / 0.65 threshold, and (A
 
 Stuffing (6.4) is reported by the model. It should be counted in code: occurrences of each matched keyword per 100 words of the resume, penalty when above 3.
 
-### 8 and rule 17: education
+### 8 and rule 17: education (fixed)
+The education component is now applied only when the posting asks for a degree (`degree_required`). When it does not, the 20 points are awarded to everyone (decision: award, not rescale). When the posting names a field of study, the candidate's degree must be in that field or a clearly related one (spec 8.4). Canadian credentials (B.A.Sc., Honours Bachelor, Baccalaureat, Maitrise, college advanced diplomas, CEGEP DEC, post-graduate certificates, WES equivalency) are mapped explicitly and covered by live tests. The rest of this section is the original finding.
+
 - The 20 points are awarded or withheld whether or not the job mentions a degree. Rule 17 says "No penalty unless explicitly required by job", so a job with no degree requirement should not cost 20 points.
 - 8.4: "Field of study is ignored unless explicitly required by the job." We always ignore it.
 - App. B lists a **4-year diploma (India)** as bachelor-equivalent. The prompt treats all diplomas, including polytechnic ones, as not meeting the gate.

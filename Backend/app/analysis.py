@@ -14,7 +14,7 @@ from app.text import clean_text
 
 logger = logging.getLogger(__name__)
 
-SCORING_VERSION = "v5.0"
+SCORING_VERSION = "v5.1"  # keep in sync with frontend/src/lib/analysisCache.ts
 
 
 async def analyze(

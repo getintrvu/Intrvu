@@ -43,17 +43,36 @@ EXPERIENCE
 - Consider seniority, domain, industry relevance and career progression.
 
 EDUCATION
-- Report the HIGHEST completed degree and map it to a level. Judge by what the degree is, not by the
-  exact spelling or punctuation (B.E., BE, B.Tech and Bachelor of Technology are all the same).
-  - bachelor: any bachelor-level degree, including 3-year ones. Examples: BA, BS, BSc, B.Sc, BEng,
-    B.E., B.Tech, BCA, BCom, B.Com, BBA, BBM, B.Arch, B.Pharm, B.Ed, MBBS, LLB, LLB (Hons),
-    Honours bachelor, licence/licenciatura/laurea, or any internationally recognized undergraduate degree.
-  - master: MA, MS, MSc, M.Sc, MEng, M.E., M.Tech, MCA, MBA, MCom, LLM, MPhil, M.Arch, or an
-    integrated/dual degree whose final award is a master's.
-  - doctorate: PhD, DPhil, EdD, DBA, MD.
-  - associate_or_diploma: associate degrees, diplomas (including polytechnic and ITI diplomas),
-    certificates, bootcamps, A-levels, and school-leaving certificates (e.g. 12th / Higher Secondary).
-  - none: no degree or qualification at all.
+First read the POSTING:
+- degree_required: true only if the posting states an education requirement (for example "Bachelor's
+  degree", "degree or equivalent", "B.Sc. in Computer Science", "diploma required"). Preferred or
+  "an asset" counts as not required. False when the posting says nothing about education.
+- required_field: the field of study the posting explicitly names (for example "Computer Science or a
+  related field" -> "Computer Science"). Empty when it names none or only asks for "a degree".
+- field_matches_requirement: true when required_field is empty, or when the candidate's degree is in
+  that field or a clearly related one (Software Engineering counts for Computer Science). False
+  otherwise, or when the candidate has no degree.
+
+Then read the RESUME. Report the HIGHEST completed degree and map it to a level. Judge by what the
+degree is, not by the exact spelling, punctuation or language (B.E., BE, B.Tech and Bachelor of
+Technology are the same; "Baccalaureat" is a bachelor's degree).
+- bachelor: any bachelor-level degree, including 3-year ones. Examples: BA, BS, BSc, B.Sc., BEng,
+  B.Eng., B.Comm., BCom, BBA, BASc, B.A.Sc., BEd, B.Tech, B.E., BCA, B.Arch, B.Pharm, MBBS, LLB,
+  Honours Bachelor (Hons), Bachelor of Applied Science/Technology/Information Technology (also from
+  Canadian colleges), Baccalaureat (Quebec and France), licence/licenciatura/laurea, or any
+  internationally recognized undergraduate degree. A post-graduate certificate or graduate diploma
+  also means the person already holds a bachelor's degree, so use bachelor (or higher if a higher
+  degree is listed). A credential evaluation (WES, ICAS, IQAS) stating equivalence to a Canadian
+  bachelor's degree counts as bachelor.
+- master: MA, MS, MSc, M.Sc., MEng, M.A.Sc., MASc, M.E., M.Tech, MCA, MBA, MCom, LLM, MPhil, M.Arch,
+  Maitrise (Quebec), or an integrated/dual degree whose final award is a master's.
+- doctorate: PhD, DPhil, EdD, DBA, MD, Doctorat.
+- associate_or_diploma: associate degrees, college diplomas and 3-year advanced diplomas (for example
+  Ontario colleges), the Quebec DEC / CEGEP diploma, AEC, trade and apprenticeship certificates (Red
+  Seal), polytechnic and ITI diplomas, certificates, bootcamps, A-levels, and school-leaving
+  certificates (high-school diploma, OSSD, 12th / Higher Secondary). A diploma that is explicitly
+  4 years long, or stated to be equivalent to a bachelor's degree, counts as bachelor instead.
+- none: no degree or qualification at all.
 - If several degrees are listed, return the highest. If a degree is not completed yet (pursuing, in
   progress, expected graduation), still report it and append " (in progress)" to degree_found.
 - If no degree is present, use degree_found "None", level "none", and an empty field_of_study.
