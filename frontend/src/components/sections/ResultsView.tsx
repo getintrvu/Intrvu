@@ -18,10 +18,12 @@ interface ScoreCardProps {
   barClass: string;
   tipLabel: string;
   tip: string;
+  /** Resume Quality is shown as a tier only: the spec says its number must not be exposed. */
+  showScore?: boolean;
 }
 
 /** One headline result: title and badge, the percentage as a clear number, a bar, and a tip. */
-const ScoreCard: React.FC<ScoreCardProps> = ({ title, label, percentage, icon, iconBg, barClass, tipLabel, tip }) => {
+const ScoreCard: React.FC<ScoreCardProps> = ({ title, label, percentage, icon, iconBg, barClass, tipLabel, tip, showScore = true }) => {
   const pct = Math.max(0, Math.min(100, Math.round(Number(percentage) || 0)));
   return (
     <div className="rounded-[24px] border border-[#f1f5f9] bg-white p-5 shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
@@ -33,6 +35,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ title, label, percentage, icon, i
         <ScoreBadge label={label} />
       </div>
 
+      {showScore && (
       <div className="mt-5">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-[28px] font-bold leading-none tabular-nums text-[#1e293b]">
@@ -57,8 +60,9 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ title, label, percentage, icon, i
           <span>100</span>
         </div>
       </div>
+      )}
 
-      <div className="mt-4 flex items-start gap-3 rounded-[18px] border border-[#dbeafe] bg-[#eff6ff] p-4">
+      <div className={`${showScore ? 'mt-4' : 'mt-5'} flex items-start gap-3 rounded-[18px] border border-[#dbeafe] bg-[#eff6ff] p-4`}>
         <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#3b82f6]" />
         <p className="text-xs leading-relaxed text-[#1e40af]">
           <span className="font-bold">{tipLabel}: </span>
@@ -123,6 +127,7 @@ const ResultsView: React.FC<ResultsSectionProps> = ({ analysisData, onUploadNewR
           barClass="bg-gradient-to-r from-[#22c55e] to-[#16a34a]"
           tipLabel="Pro tip"
           tip={qualityTip}
+          showScore={false}
         />
 
         <div className="flex flex-col items-center gap-3 pt-2">

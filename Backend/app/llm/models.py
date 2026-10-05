@@ -111,6 +111,7 @@ class BulletReview(BaseModel):
 
 class QualityExtraction(BaseModel):
     sections: SectionsPresent
+    section_headers: list[str]  # every section heading exactly as written in the resume
     structure_advice: str
 
     strong_verbs: list[StrongVerbUse]

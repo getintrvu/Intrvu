@@ -12,12 +12,20 @@ const data = (fit: number, fitLabel: string, q: number, qLabel: string) =>
     },
   }) as unknown as AnalysisData;
 
-it('shows each percentage as text next to the bar rather than floating over it', () => {
+it('shows the Job Fit percentage as text next to its bar, not floating over it', () => {
   const { container } = render(<ResultsView analysisData={data(43, 'Low Fit', 42, 'Refine for Impact')} />);
   const bars = screen.getAllByRole('progressbar');
-  expect(bars.map((b) => b.getAttribute('aria-valuenow'))).toEqual(['43', '42']);
+  expect(bars.map((b) => b.getAttribute('aria-valuenow'))).toEqual(['43']);
   // the old label was absolutely positioned and overlapped the 50% tick
   expect(container.querySelectorAll('.absolute')).toHaveLength(0);
+});
+
+it('never shows the Resume Quality number or a bar for it (spec: tier label only)', () => {
+  render(<ResultsView analysisData={data(43, 'Low Fit', 42, 'Refine for Impact')} />);
+  expect(screen.queryByText('42')).not.toBeInTheDocument();
+  expect(screen.queryByRole('progressbar', { name: 'Resume Quality' })).not.toBeInTheDocument();
+  expect(screen.getByText('Refine for Impact')).toBeInTheDocument();
+  expect(screen.getByText(/Add a summary\./)).toBeInTheDocument(); // the tip is still shown
 });
 
 it('uses the same badge style as the detail tabs', () => {
@@ -32,7 +40,7 @@ it('uses the same badge style as the detail tabs', () => {
 
 it('clamps out-of-range scores and shows the tips', () => {
   render(<ResultsView analysisData={data(140, 'Great Match', -5, 'Needs Polish')} />);
-  expect(screen.getAllByRole('progressbar').map((b) => b.getAttribute('aria-valuenow'))).toEqual(['100', '0']);
+  expect(screen.getAllByRole('progressbar').map((b) => b.getAttribute('aria-valuenow'))).toEqual(['100']);
   expect(screen.getByText(/Add Kubernetes\./)).toBeInTheDocument();
   expect(screen.getByText(/Add a summary\./)).toBeInTheDocument();
 });

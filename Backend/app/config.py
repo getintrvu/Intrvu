@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     # Default model when a user brings their own OpenAI key and does not pick one.
     openai_model: str = "gpt-4o-mini"
     llm_seed: int | None = 7  # fixed sampling seed: reduces run-to-run variation
-    llm_timeout_seconds: float = 40.0
+    # Worst case is attempts x timeout + back-off (2 x 25 s + 1 s = 51 s), which must stay under the
+    # 60 s function limit set in vercel.json.
+    llm_timeout_seconds: float = 25.0
     llm_max_attempts: int = 2
 
     # Supabase (auth + quota). The service role key is backend-only.

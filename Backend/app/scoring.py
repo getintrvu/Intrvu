@@ -7,6 +7,7 @@ the same evidence always produces the same score.
 import re
 from typing import Any
 
+from app.layout import LayoutReport, nonstandard_headings
 from app.llm.models import JobFitExtraction, QualityExtraction
 
 Component = dict[str, Any]
@@ -20,6 +21,9 @@ SKILLS_BANDS: Bands = [(13, "Excellent", "✅"), (10, "Good", "👍"), (7, "Fair
 STRUCTURE_BANDS: Bands = [(27, "Excellent", "✅"), (22.5, "Good", "👍"), (15, "Fair", "⚠️"), (0, "Needs Improvement", "🛑")]
 QUARTER_BANDS: Bands = [(20, "Excellent", "✅"), (15, "Good", "👍"), (10, "Fair", "⚠️"), (5, "Needs Improvement", "🛑"), (0, "Poor", "❌")]  # max 25
 BULLET_BANDS: Bands = [(18, "Excellent", "✅"), (14, "Good", "👍"), (10, "Fair", "⚠️"), (6, "Needs Improvement", "🛑"), (0, "Poor", "❌")]
+
+# Negative adjustments within any one component may remove at most this share of its maximum.
+NEGATIVE_CAP = 0.4
 
 JOB_FIT_LABELS = [(90, "Great Match", "✅"), (75, "Good Match", "👍"), (60, "Moderate Match", "⚠️"), (0, "Low Fit", "🛠")]
 QUALITY_LABELS = [(90, "Ready to Impress", "✅"), (70, "Needs Polish", "⚠️"), (0, "Refine for Impact", "🛠")]
@@ -102,9 +106,12 @@ def score_experience(ex: JobFitExtraction) -> Component:
     partial = [r for r in ex.roles if r.fit == "partial"]
     misaligned = [r for r in ex.roles if r.fit == "misaligned"]
 
-    raw = 3 * len(strong) + 1.5 * len(partial) - len(misaligned)
     relevant = len(strong) + len(partial)
     expected_max = max(min(relevant * 3, 12), 1)
+    # Guardrail (spec section 5): negative adjustments are capped at 40% of the component's maximum,
+    # i.e. 12 of the 30 points once normalized. In raw units that is 12 * expected_max / 30.
+    negative = min(len(misaligned), NEGATIVE_CAP * 30 * expected_max / 30)
+    raw = 3 * len(strong) + 1.5 * len(partial) - negative
     points = _clamp(raw / expected_max * 30, 0, 30)
 
     def item(role, pts, status, symbol):
@@ -188,7 +195,9 @@ def score_skills(ex: JobFitExtraction) -> Component:
         {"skill": m.skill, "points": -1, "skillType": m.skill_type, "status": "Missing Critical", "symbol": "❌"}
         for m in ex.missing_skills
     ]
-    points = _clamp(sum(i["points"] for i in hard + soft) - len(missing), 0, 15)
+    # Guardrail (spec section 5): missing-skill penalties are capped at 40% of the 15 points.
+    penalty = min(len(missing), NEGATIVE_CAP * 15)
+    points = _clamp(sum(i["points"] for i in hard + soft) - penalty, 0, 15)
     matched = len(hard) + len(soft)
 
     return {
@@ -221,9 +230,10 @@ _NICE = [
 ]
 
 
-def score_structure(ex: QualityExtraction, resume_text: str) -> Component:
-    """30 pts: 7.5 per required section. Contact details and links are also checked with
-    regexes so a model miss cannot drop them."""
+def score_structure(ex: QualityExtraction, resume_text: str, layout: LayoutReport | None = None) -> Component:
+    """30 pts: 7.5 per required section, minus 1 per ATS-unfriendly formatting issue (spec appendix C,
+    capped at 40% of the component). Contact details and links are also checked with regexes so a
+    model miss cannot drop them."""
     present = ex.sections.model_dump()
     present["personal_information"] = present["personal_information"] or bool(_EMAIL.search(resume_text) or _PHONE.search(resume_text))
     present["links"] = present["links"] or bool(_LINK.search(resume_text))
@@ -241,15 +251,39 @@ def score_structure(ex: QualityExtraction, resume_text: str) -> Component:
         status.append({"section": name, "type": "nice-to-have", "status": "Completed" if ok else "Missing", "symbol": "💡" if ok else "⚪"})
 
     missing = [name for name, key in _REQUIRED if not present[key]]
-    points = done_required * 7.5
-    advice = f"Add the missing sections: {', '.join(missing)}." if missing else ex.structure_advice
+
+    ats_issues = [{"issue": i.issue, "detail": i.detail, "points": -1} for i in (layout.issues if layout else [])]
+    for heading in nonstandard_headings(ex.section_headers):
+        ats_issues.append(
+            {
+                "issue": "Non-standard section heading",
+                "detail": f'"{heading}" may not be recognised by applicant tracking systems. Use a standard name such as '
+                "Experience, Education or Skills.",
+                "points": -1,
+            }
+        )
+    penalty = min(len(ats_issues), NEGATIVE_CAP * 30)
+    points = max(done_required * 7.5 - penalty, 0)
+
+    if missing:
+        advice = f"Add the missing sections: {', '.join(missing)}."
+    elif ats_issues:
+        advice = "Fix the formatting issues below so applicant tracking systems can read your resume."
+    else:
+        advice = ex.structure_advice
     return {
         "score": _score_block(
             points, 30, STRUCTURE_BANDS,
             completedMustHave=done_required, totalMustHave=len(_REQUIRED),
             completedNiceToHave=done_nice, totalNiceToHave=len(_NICE), bonusPoints=0,
+            atsPenalty=_round(penalty),
         ),
-        "analysis": {"sectionStatus": status, "missingRequiredSections": missing, "suggestedImprovements": advice},
+        "analysis": {
+            "sectionStatus": status,
+            "missingRequiredSections": missing,
+            "atsIssues": ats_issues,
+            "suggestedImprovements": advice,
+        },
     }
 
 

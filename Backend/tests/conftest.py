@@ -93,6 +93,7 @@ def quality_extraction() -> QualityExtraction:
             professional_summary=False, skills=True, certifications=False, projects=False,
             awards=False, volunteering=False, publications=False,
         ),
+        section_headers=["Experience", "Education", "Skills"],
         structure_advice="Add a summary.",
         strong_verbs=[StrongVerbUse(bullet="Led a team of 6 engineers", verb="Led")] * 4,
         weak_verbs=[WeakVerbUse(bullet="Helped with deploys", verb="Helped", suggested_replacement="Automated")],
@@ -190,3 +191,28 @@ def client(llm, quota, user_data):
 @pytest.fixture
 def auth():
     return {"Authorization": f"Bearer {make_token()}"}
+
+
+def make_positioned_pdf(items: list[tuple[float, float, str]], pages: int = 1) -> bytes:
+    """A PDF with each text item drawn at (x, y) on a 612x792 page. Used to build layouts."""
+    def esc(t):
+        return t.replace("\\", "\\\\").replace("(", "[").replace(")", "]")
+
+    stream = "BT /F1 10 Tf " + " ".join(f"1 0 0 1 {x} {y} Tm ({esc(t)}) Tj" for x, y, t in items) + " ET"
+    objs = [
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [" + " ".join(f"{3 + i * 2} 0 R" for i in range(pages)) + f"] /Count {pages} >>",
+    ]
+    for i in range(pages):
+        objs.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {4 + i * 2} 0 R /Resources << /Font << /F1 {3 + pages * 2} 0 R >> >> >>")
+        objs.append(f"<< /Length {len(stream)} >>\nstream\n{stream}\nendstream")
+    objs.append("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    out, offsets = b"%PDF-1.4\n", []
+    for i, body in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n{body}\nendobj\n".encode()
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode()
+    out += "".join(f"{o:010d} 00000 n \n" for o in offsets).encode()
+    out += f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode()
+    return out

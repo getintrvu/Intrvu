@@ -5,6 +5,7 @@ import time
 
 from app import scoring
 from app.config import Settings
+from app.layout import LayoutReport
 from app.llm import prompts
 from app.llm.client import LLM
 from app.llm.models import JobFitExtraction, QualityExtraction
@@ -16,7 +17,9 @@ logger = logging.getLogger(__name__)
 SCORING_VERSION = "v5.0"
 
 
-async def analyze(resume_text: str, job: JobInput, llm: LLM, settings: Settings) -> AnalyzeResponse:
+async def analyze(
+    resume_text: str, job: JobInput, llm: LLM, settings: Settings, layout: LayoutReport | None = None
+) -> AnalyzeResponse:
     """Raises AppError if either extraction fails; a partial result is never returned."""
     started = time.monotonic()
     job_text = clean_text(job.description, settings.max_job_chars)
@@ -32,7 +35,7 @@ async def analyze(resume_text: str, job: JobInput, llm: LLM, settings: Settings)
     education = scoring.score_education(fit_ex)
     skills = scoring.score_skills(fit_ex)
 
-    structure = scoring.score_structure(quality_ex, resume_text)
+    structure = scoring.score_structure(quality_ex, resume_text, layout)
     action_words = scoring.score_action_words(quality_ex)
     measurable = scoring.score_measurable(quality_ex)
     bullets = scoring.score_bullets(quality_ex)

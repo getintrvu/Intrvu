@@ -41,8 +41,8 @@ export type SkillsTools = Component<{ matchPercentage: number }, {
 }>;
 
 export type ResumeStructure = Component<
-  { completedMustHave: number; totalMustHave: number; completedNiceToHave: number; totalNiceToHave: number; bonusPoints: number },
-  { sectionStatus: Item[]; missingRequiredSections: string[] }
+  { completedMustHave: number; totalMustHave: number; completedNiceToHave: number; totalNiceToHave: number; bonusPoints: number; atsPenalty: number },
+  { sectionStatus: Item[]; missingRequiredSections: string[]; atsIssues: { issue: string; detail: string; points: number }[] }
 >;
 
 export type ActionWords = Component<{ actionVerbPercentage: number }, {

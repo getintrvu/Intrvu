@@ -12,6 +12,7 @@ from app.errors import bad_request, quota_exceeded
 from app.llm.client import LLM
 from app.llm.factory import ByokConfig, get_byok, get_request_llm
 from app.llm.models import KeyCheck
+from app.layout import analyze_layout
 from app.pdf import extract_resume_text
 from app.quota import QuotaService, UserDataService, get_quota_service, get_user_data_service
 from app.schemas import AnalyzeResponse, JobInput, KeyCheckResponse, UsageResponse
@@ -77,18 +78,19 @@ async def analyze_resume(
         max_pages=settings.max_pdf_pages,
         max_chars=settings.max_resume_chars,
     )
+    layout = await run_in_threadpool(analyze_layout, data, settings.max_pdf_pages)
 
     # Users who bring their own key pay their provider directly, so the daily quota (which exists to
     # cap our own AI spend) does not apply to them.
     if llm.byok:
-        return await analysis.analyze(resume_text, job, llm, settings)
+        return await analysis.analyze(resume_text, job, llm, settings, layout)
 
     status = await quota.consume(user.id)
     if not status.allowed:
         raise quota_exceeded(status.used, status.limit)
 
     try:
-        return await analysis.analyze(resume_text, job, llm, settings)
+        return await analysis.analyze(resume_text, job, llm, settings, layout)
     except Exception:
         await quota.release(user.id)  # the user should not pay for our failure
         raise

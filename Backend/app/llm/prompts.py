@@ -73,6 +73,8 @@ def quality_prompt(resume_text: str) -> str:
 SECTIONS
 - Mark each section present only if the resume contains real content for it. personal_information
   means name plus contact details; links means a LinkedIn, GitHub, portfolio, or website URL.
+- section_headers: list every section heading exactly as it is written (for example "Work Experience",
+  "Education", "Things I've Built"). Include headings only, never job titles, company names or bullets.
 
 ACTION WORDS (look at work experience and project bullets)
 - strong_verbs: bullets that open with a strong action verb (led, launched, designed, implemented,
