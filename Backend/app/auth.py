@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 _bearer = HTTPBearer(auto_error=False)
 _ASYMMETRIC_ALGS = ["ES256", "RS256", "EdDSA"]
+_CLOCK_SKEW_SECONDS = 60
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,7 @@ class TokenVerifier:
                 algorithms=algorithms,
                 audience="authenticated",
                 issuer=self._issuer,
+                leeway=_CLOCK_SKEW_SECONDS,  # tolerate small clock differences (iat/nbf/exp)
                 options={"require": ["exp", "sub"]},
             )
         except jwt.PyJWKClientConnectionError as exc:

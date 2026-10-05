@@ -12,7 +12,9 @@ class Settings(BaseSettings):
 
     # LLM
     gemini_api_key: str = ""
-    llm_model: str = "gemini-2.5-flash"
+    llm_model: str = "gemini-3.5-flash-lite"
+    # Tried on the last attempt when the primary model keeps failing with a transient error.
+    llm_fallback_model: str = "gemini-3.1-flash-lite"
     llm_timeout_seconds: float = 40.0
     llm_max_attempts: int = 2
 

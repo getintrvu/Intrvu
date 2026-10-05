@@ -63,3 +63,12 @@ def test_unconfigured_supabase_fails_closed():
     with pytest.raises(AppError) as err:
         verifier.verify("anything")
     assert err.value.status_code == 503
+
+
+def test_small_clock_skew_is_tolerated(verifier_and_key):
+    """A token 'issued' 30 s in the future (our clock slightly behind Supabase's) must still work."""
+    verifier, key = verifier_and_key
+    now = int(time.time())
+    assert verifier.verify(token(key, iat=now + 30, nbf=now + 30)).id == "abc"
+    with pytest.raises(AppError):
+        verifier.verify(token(key, iat=now + 600, nbf=now + 600))  # a real problem is still rejected

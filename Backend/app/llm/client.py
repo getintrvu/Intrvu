@@ -39,6 +39,13 @@ class GeminiLLM:
             )
         return self._client
 
+    def _model_for(self, attempt: int, attempts: int) -> str:
+        """The last attempt uses the fallback model (when configured) if earlier ones failed."""
+        fallback = self._settings.llm_fallback_model
+        if attempts > 1 and attempt == attempts and fallback and fallback != self._settings.llm_model:
+            return fallback
+        return self._settings.llm_model
+
     async def extract(self, schema: type[T], system: str, prompt: str) -> T:
         from google.genai import errors, types
 
@@ -48,13 +55,14 @@ class GeminiLLM:
             response_mime_type="application/json",
             response_schema=schema,
             temperature=0.0,
+            # We never use tools; stop the SDK from running its function-calling loop.
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
         attempts = max(self._settings.llm_max_attempts, 1)
         for attempt in range(1, attempts + 1):
+            model = self._model_for(attempt, attempts)
             try:
-                response = await client.aio.models.generate_content(
-                    model=self._settings.llm_model, contents=prompt, config=config
-                )
+                response = await client.aio.models.generate_content(model=model, contents=prompt, config=config)
                 parsed = response.parsed
                 if isinstance(parsed, schema):
                     return parsed
@@ -62,8 +70,13 @@ class GeminiLLM:
                     return schema.model_validate_json(response.text)
                 logger.warning("LLM returned no content (attempt %d/%d)", attempt, attempts)
             except errors.APIError as exc:
-                logger.warning("Gemini API error %s (attempt %d/%d)", exc.code, attempt, attempts)
-                if exc.code not in _TRANSIENT_CODES:
+                logger.warning(
+                    "Gemini API error %s on %s (attempt %d/%d): %s",
+                    exc.code, model, attempt, attempts, str(exc.message)[:200],
+                )
+                # A 404 usually means the primary model was retired: worth trying the fallback model.
+                retryable = exc.code in _TRANSIENT_CODES or (exc.code == 404 and attempt < attempts)
+                if not retryable:
                     raise analysis_failed() from exc
                 if attempt == attempts:
                     raise service_unavailable(

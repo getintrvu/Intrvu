@@ -26,7 +26,7 @@ def test_analyze_requires_auth(client, llm, quota):
 
 def test_rejects_bad_tokens(client):
     for token in [
-        make_token(exp_in=-10),
+        make_token(exp_in=-300),  # clearly expired (a 60 s clock-skew tolerance applies)
         make_token(aud="anon"),
         make_token(secret="wrong-secret-wrong-secret-wrong-secret"),
         "not-a-jwt",

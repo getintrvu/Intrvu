@@ -48,7 +48,8 @@ class QuotaService:
         try:
             response = await self._http().post(f"{self._base}/rpc/{name}", json=payload)
             response.raise_for_status()
-            return response.json()
+            # Functions that return void (release, delete) respond with an empty body.
+            return response.json() if response.content else {}
         except (httpx.HTTPError, ValueError) as exc:
             logger.error("Quota RPC %s failed: %s", name, type(exc).__name__)
             raise service_unavailable() from exc

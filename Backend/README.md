@@ -33,6 +33,16 @@ cp .env.example .env                                  # then fill it in; AUTH_RE
 
 The tests use fakes for Gemini and Supabase and need no keys or network.
 
+## Choosing a model
+
+Google retires models for new users without much notice (`gemini-2.5-flash` returned a 404 for a new key). List what your key can use, and set `LLM_MODEL` / `LLM_FALLBACK_MODEL` accordingly:
+
+```bash
+.venv/Scripts/python -c "from google import genai; from dotenv import dotenv_values; c = genai.Client(api_key=dotenv_values('.env')['GEMINI_API_KEY']); print(sorted(m.name for m in c.models.list() if 'generateContent' in (m.supported_actions or [])))"
+```
+
+The last retry uses the fallback model, and so does a 404 on the primary, so one retired model does not take the service down. Measured with a real resume: `gemini-3.5-flash-lite` runs both calls in about 3 s.
+
 ## Deploy (Vercel)
 
 1. Use the Supabase project shared with the other products (or a new one), enable the Google provider, and run `supabase/migrations/0001_init.sql` in the SQL editor.
